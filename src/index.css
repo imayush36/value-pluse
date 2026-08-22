@@ -3914,6 +3914,30 @@ img {
   margin-bottom: 18px;
 }
 
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0c63bf;
+  font-weight: 700;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon input {
+  padding-left: 42px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #64748b;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -4018,6 +4042,14 @@ img {
   color: #1f2f42;
   font-size: 0.96rem;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.social-icon {
+  flex-shrink: 0;
 }
 
 .gmail-btn {
