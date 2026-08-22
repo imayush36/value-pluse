@@ -3010,6 +3010,9 @@ img {
   .header-actions-group {
     display: none; /* bottom nav handles these on mobile */
   }
+  .header-search-container {
+    display: none;
+  }
   .mobile-nav-toggle-btn {
     display: none;
   }
@@ -3056,13 +3059,41 @@ img {
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .modal-backdrop {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+  .details-modal,
+  .checkout-modal {
+    max-height: calc(100vh - 1.5rem);
+    border-radius: var(--radius-lg);
+  }
+  .details-modal {
+    padding: 1.25rem !important;
+  }
+  .checkout-modal {
+    padding: 1.25rem;
+  }
+  .order-track-form {
+    flex-direction: column;
+  }
+  .order-track-form .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .order-tracking-route {
+    min-width: 0;
+  }
+  .order-tracking-route span {
+    overflow-wrap: anywhere;
+  }
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.85rem;
-  }
-  /* Hide desktop search bar (mobile search row is shown instead) */
-  .header-search-container {
-    display: none;
   }
   .hero-banner-card {
     height: 300px;
@@ -3102,6 +3133,37 @@ img {
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .main-header-bar {
+    padding: 0.65rem 0;
+  }
+  .brand-logo-badge {
+    font-size: 1.4rem;
+  }
+  .brand-subtext {
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+  .mobile-search-box {
+    height: 42px;
+  }
+  .mobile-search-box .search-submit-btn {
+    padding: 0 1rem;
+  }
+  .modal-close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+  .order-tracking-route span {
+    font-size: 0.62rem !important;
+  }
+  .order-tracking-car {
+    width: 25px;
+    height: 25px;
+  }
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.65rem;
