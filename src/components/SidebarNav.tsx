@@ -8,6 +8,7 @@ export default function SidebarNav() {
 
   const items = [
     { href: '/', label: 'Home', icon: Home },
+    { href: '/login', label: 'Login', icon: UserPlus },
     { href: '/register', label: 'Registration', icon: UserPlus },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];

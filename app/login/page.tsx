@@ -12,12 +12,12 @@ export default function LoginPage() {
         </div>
 
         <h1>Welcome back</h1>
-        <p>Sign in with your email or phone number.</p>
+        <p>Login with your email and password.</p>
 
         <form className="auth-form">
           <label className="field-group">
-            <span>Email or mobile number</span>
-            <input type="text" placeholder="you@example.com or +91 98765 43210" />
+            <span>Email address</span>
+            <input type="email" placeholder="you@example.com" />
           </label>
 
           <label className="field-group">
@@ -40,7 +40,6 @@ export default function LoginPage() {
 
         <div className="social-stack">
           <button type="button" className="social-btn gmail-btn">Continue with Gmail</button>
-          <button type="button" className="social-btn phone-btn">Continue with Phone Number</button>
         </div>
 
         <p className="auth-footer">

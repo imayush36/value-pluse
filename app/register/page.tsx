@@ -12,7 +12,7 @@ export default function RegisterPage() {
         </div>
 
         <h1>Create account</h1>
-        <p>Register with your email or phone number.</p>
+        <p>Register with your email to get started.</p>
 
         <form className="auth-form">
           <label className="field-group">
@@ -23,11 +23,6 @@ export default function RegisterPage() {
           <label className="field-group">
             <span>Email address</span>
             <input type="email" placeholder="you@example.com" />
-          </label>
-
-          <label className="field-group">
-            <span>Phone number</span>
-            <input type="tel" placeholder="+91 98765 43210" />
           </label>
 
           <label className="field-group">
@@ -47,7 +42,6 @@ export default function RegisterPage() {
 
         <div className="social-stack">
           <button type="button" className="social-btn gmail-btn">Sign up with Gmail</button>
-          <button type="button" className="social-btn phone-btn">Sign up with Phone Number</button>
         </div>
 
         <p className="auth-footer">
