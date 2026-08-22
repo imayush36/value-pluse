@@ -12,6 +12,7 @@ import {
   Store,
   ChevronDown,
   ArrowRight,
+  UserRound,
 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -33,6 +34,9 @@ export default function Navbar() {
     selectedProduct,
     setSelectedProduct,
     formatPrice,
+    setIsAuthModalOpen,
+    isAuthenticated,
+    currentUser,
   } = useShop();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -218,6 +222,14 @@ export default function Navbar() {
 
             {/* Desktop Actions (hidden on mobile — bottom bar handles those) */}
             <div className="header-actions-group">
+              <button className="header-action-item" onClick={() => setIsAuthModalOpen(true)} title="Account">
+                <UserRound size={20} />
+                <div className="action-text-block">
+                  <span className="action-sub">{isAuthenticated ? 'Hi' : 'Sign in'}</span>
+                  <span className="action-main">{isAuthenticated ? currentUser.fullName.split(' ')[0] : 'Account'}</span>
+                </div>
+              </button>
+
               <button className="header-action-item" onClick={() => setIsOrdersModalOpen(true)} title="My Orders">
                 <Package size={20} />
                 <div className="action-text-block">

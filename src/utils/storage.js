@@ -1,6 +1,8 @@
 const CART_KEY = 'technova_cart_v1';
 const WISHLIST_KEY = 'technova_wishlist_v1';
 const ORDERS_KEY = 'technova_orders_v1';
+const USERS_KEY = 'valueplus_users_v1';
+const SESSION_KEY = 'valueplus_session_v1';
 
 export const storage = {
   getCart: () => {
@@ -58,6 +60,50 @@ export const storage = {
     } catch (e) {
       console.error('Failed to save order', e);
       return [];
+    }
+  },
+
+  getUsers: () => {
+    try {
+      const data = localStorage.getItem(USERS_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.error('Failed to load users from storage', e);
+      return [];
+    }
+  },
+
+  saveUsers: (users) => {
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } catch (e) {
+      console.error('Failed to save users', e);
+    }
+  },
+
+  getSession: () => {
+    try {
+      const data = localStorage.getItem(SESSION_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      console.error('Failed to load session', e);
+      return null;
+    }
+  },
+
+  saveSession: (user) => {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    } catch (e) {
+      console.error('Failed to save session', e);
+    }
+  },
+
+  clearSession: () => {
+    try {
+      localStorage.removeItem(SESSION_KEY);
+    } catch (e) {
+      console.error('Failed to clear session', e);
     }
   },
 

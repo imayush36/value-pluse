@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
 import { PRODUCTS } from '../data/products';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const ShopContext = createContext();
 
@@ -10,7 +11,13 @@ export const ShopProvider = ({ children }) => {
   // Wishlist State
   const [wishlist, setWishlist] = useState(() => storage.getWishlist());
   // Orders State
-  const [orders, setOrders] = useState(() => storage.getOrders());
+  const [orders, setOrders] = useState(() => {
+    const session = storage.getSession();
+    return session?.email
+      ? storage.getOrders().filter((order) => order.customer?.email?.toLowerCase() === session.email.toLowerCase())
+      : [];
+  });
+  const [currentUser, setCurrentUser] = useState(() => storage.getSession());
 
   // UI Modals & Drawers State
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -19,6 +26,7 @@ export const ShopProvider = ({ children }) => {
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isPincodeModalOpen, setIsPincodeModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [lastPlacedOrder, setLastPlacedOrder] = useState(null);
   const [buyNowItem, setBuyNowItem] = useState(null);
@@ -48,6 +56,102 @@ export const ShopProvider = ({ children }) => {
 
   // Toasts
   const [toasts, setToasts] = useState([]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return undefined;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        const user = data.session.user;
+        setCurrentUser({ id: user.id, fullName: user.user_metadata.fullName, email: user.email, phone: user.user_metadata.phone });
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
+      setCurrentUser(user ? { id: user.id, fullName: user.user_metadata.fullName, email: user.email, phone: user.user_metadata.phone } : null);
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser?.email) {
+      setOrders([]);
+      return;
+    }
+    if (!isSupabaseConfigured || !currentUser?.id) {
+      setOrders(storage.getOrders().filter((order) => order.customer?.email?.toLowerCase() === currentUser.email.toLowerCase()));
+      return;
+    }
+    const loadCustomerOrders = () => supabase.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).then(({ data, error }) => {
+      if (!error && data) {
+        setOrders(data.map((order) => ({ ...order, orderId: order.order_id, estimatedDelivery: order.estimated_delivery })));
+      }
+    });
+    loadCustomerOrders();
+    const ordersChannel = supabase
+      .channel(`customer-orders-${currentUser.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${currentUser.id}` }, loadCustomerOrders)
+      .subscribe();
+    return () => supabase.removeChannel(ordersChannel);
+  }, [currentUser?.id]);
+
+  const register = async (userData) => {
+    const email = userData.email.trim().toLowerCase();
+    const phone = userData.phone.trim();
+    if (userData.password.length < 6) {
+      return { success: false, message: 'Password must be at least 6 characters.' };
+    }
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return { success: false, message: 'Please enter a valid 10-digit mobile number.' };
+    }
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: userData.password,
+        options: { data: { fullName: userData.fullName.trim(), phone } },
+      });
+      if (error) return { success: false, message: error.message };
+      showToast('Account created. Check your email to verify it.');
+      return { success: true };
+    }
+    if (storage.getUsers().some((user) => user.email === email)) {
+      return { success: false, message: 'An account with this email already exists.' };
+    }
+    const user = { fullName: userData.fullName.trim(), email, phone };
+    storage.saveUsers([...storage.getUsers(), { ...user, password: userData.password }]);
+    storage.saveSession(user);
+    setCurrentUser(user);
+    showToast('Account created successfully');
+    return { success: true };
+  };
+
+  const login = async (email, password) => {
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (error) return { success: false, message: error.message };
+      const user = data.user;
+      setCurrentUser({ id: user.id, fullName: user.user_metadata.fullName, email: user.email, phone: user.user_metadata.phone });
+      showToast('Welcome back to Value Plus');
+      return { success: true };
+    }
+    const user = storage.getUsers().find((item) => item.email === email.trim().toLowerCase() && item.password === password);
+    if (!user) {
+      return { success: false, message: 'Incorrect email or password.' };
+    }
+    const sessionUser = { fullName: user.fullName, email: user.email, phone: user.phone };
+    storage.saveSession(sessionUser);
+    setCurrentUser(sessionUser);
+    showToast('Welcome back to Value Plus');
+    return { success: true };
+  };
+
+  const logout = async () => {
+    if (isSupabaseConfigured) await supabase.auth.signOut();
+    storage.clearSession();
+    setCurrentUser(null);
+    showToast('You have been logged out', 'info');
+  };
 
   // Save changes to localStorage
   useEffect(() => {
@@ -140,7 +244,7 @@ export const ShopProvider = ({ children }) => {
   };
 
   // Order Placement
-  const placeOrder = (customerDetails, items, totals) => {
+  const placeOrder = async (customerDetails, items, totals) => {
     const orderId = 'VP-' + Math.floor(100000 + Math.random() * 900000);
     const orderData = {
       orderId,
@@ -160,7 +264,25 @@ export const ShopProvider = ({ children }) => {
     };
 
     const updatedOrders = storage.saveOrder(orderData);
-    setOrders(updatedOrders);
+    const customerOrders = isSupabaseConfigured
+      ? [orderData, ...orders.filter((order) => order.orderId !== orderData.orderId)]
+      : updatedOrders.filter((order) => order.customer?.email?.toLowerCase() === customerDetails.email.toLowerCase());
+    setOrders(customerOrders);
+    if (isSupabaseConfigured && currentUser?.id) {
+      const { error } = await supabase.from('orders').insert({
+        user_id: currentUser.id,
+        order_id: orderData.orderId,
+        customer: orderData.customer,
+        items: orderData.items,
+        subtotal: orderData.subtotal,
+        delivery: orderData.delivery,
+        discount: orderData.discount,
+        total: orderData.total,
+        status: orderData.status,
+        estimated_delivery: orderData.estimatedDelivery,
+      });
+      if (error) showToast('Order saved locally, but cloud sync failed.', 'error');
+    }
     setLastPlacedOrder(orderData);
 
     // If it was regular cart checkout, clear cart
@@ -187,6 +309,8 @@ export const ShopProvider = ({ children }) => {
         cart,
         wishlist,
         orders,
+        currentUser,
+        isAuthenticated: Boolean(currentUser),
         cartCount,
         cartSubtotal,
         isCartOpen,
@@ -201,6 +325,8 @@ export const ShopProvider = ({ children }) => {
         setIsOrdersModalOpen,
         isPincodeModalOpen,
         setIsPincodeModalOpen,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
         selectedProduct,
         setSelectedProduct,
         buyNowItem,
@@ -229,6 +355,9 @@ export const ShopProvider = ({ children }) => {
         isWishlisted,
         handleBuyNow,
         placeOrder,
+        login,
+        register,
+        logout,
         formatPrice,
       }}
     >

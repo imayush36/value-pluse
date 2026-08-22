@@ -17,6 +17,7 @@ import OrderSuccess from './components/OrderSuccess';
 import OrdersModal from './components/OrdersModal';
 import PincodeModal from './components/PincodeModal';
 import Toast from './components/Toast';
+import AuthModal from './components/AuthModal';
 
 function MainAppContent() {
   const { selectedProduct } = useShop();
@@ -54,6 +55,7 @@ function MainAppContent() {
       <OrderSuccess />
       <OrdersModal />
       <PincodeModal />
+      <AuthModal />
       <Toast />
 
       {/* Mobile App-Style Bottom Navigation Bar */}

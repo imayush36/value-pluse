@@ -1,9 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
-import { X, Package, Calendar, MapPin, CheckCircle2 } from 'lucide-react';
+import { X, Package, Calendar, MapPin, CheckCircle2, Search, Clock3, Truck, Home } from 'lucide-react';
+
+const TRACKING_STEPS = [
+  { label: 'Order confirmed', status: 'Confirmed', icon: CheckCircle2 },
+  { label: 'Packed at warehouse', status: 'Packed', icon: Package },
+  { label: 'Out for delivery', status: 'Out for delivery', icon: Truck },
+  { label: 'Delivered', status: 'Delivered', icon: Home },
+];
 
 export default function OrdersModal() {
   const { orders, isOrdersModalOpen, setIsOrdersModalOpen, formatPrice } = useShop();
+  const [trackingQuery, setTrackingQuery] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState(orders[0]?.orderId || '');
+  const [trackingError, setTrackingError] = useState('');
+
+  useEffect(() => {
+    if (orders.length > 0 && !orders.some((order) => order.orderId === selectedOrderId)) {
+      setSelectedOrderId(orders[0].orderId);
+    }
+  }, [orders, selectedOrderId]);
+
+  const selectedOrder = orders.find((order) => order.orderId === selectedOrderId);
+  const activeTrackingStep = selectedOrder
+    ? Math.max(0, TRACKING_STEPS.findIndex((step) => step.status.toLowerCase() === selectedOrder.status.toLowerCase()))
+    : 0;
+  const sortedOrders = [...orders].sort((firstOrder, secondOrder) => {
+    const firstDate = firstOrder.created_at || firstOrder.date;
+    const secondDate = secondOrder.created_at || secondOrder.date;
+    return new Date(secondDate) - new Date(firstDate);
+  });
+
+  const handleTrackOrder = (event) => {
+    event.preventDefault();
+    const orderId = trackingQuery.trim().toUpperCase().replace(/^ORDER\s*ID\s*:\s*/, '');
+    const matchingOrder = orders.find((order) => order.orderId.toUpperCase() === orderId);
+
+    if (!matchingOrder) {
+      setTrackingError('Order ID not found. Please check the ID and try again.');
+      return;
+    }
+
+    setSelectedOrderId(matchingOrder.orderId);
+    setTrackingError('');
+  };
 
   if (!isOrdersModalOpen) return null;
 
@@ -28,17 +68,78 @@ export default function OrdersModal() {
           </div>
           <div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-main)' }}>
-              Value Plus Orders ({orders.length})
+              My Orders ({orders.length})
             </h2>
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-              Track order status and history
+              All your orders, newest first
             </p>
           </div>
         </div>
 
+        <form onSubmit={handleTrackOrder} style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={17} color="var(--text-muted)" style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              value={trackingQuery}
+              onChange={(event) => { setTrackingQuery(event.target.value); setTrackingError(''); }}
+              placeholder="Enter order ID, e.g. VP-123456"
+              aria-label="Order ID"
+              style={{ width: '100%', padding: '0.7rem 0.8rem 0.7rem 2.35rem', border: '1px solid var(--border-default)', borderRadius: '8px', color: 'var(--text-main)', background: 'var(--bg-main)' }}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+            Track Order
+          </button>
+        </form>
+
+        {trackingError && (
+          <p style={{ color: '#e11d48', fontSize: '0.8rem', marginBottom: '1rem' }}>{trackingError}</p>
+        )}
+
+        {selectedOrder && (
+          <div style={{ background: 'var(--primary-light)', border: '1px solid rgba(10, 108, 220, 0.15)', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>TRACKING ORDER</span>
+                <strong style={{ color: 'var(--primary)' }}>{selectedOrder.orderId}</strong>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--accent-emerald)', fontWeight: '700', fontSize: '0.8rem' }}>
+                <Clock3 size={15} /> {selectedOrder.status}
+              </div>
+            </div>
+
+            <div className="order-tracking-route" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.35rem' }}>
+              <div className="order-tracking-line" aria-hidden="true" />
+              <div
+                className="order-tracking-car"
+                aria-hidden="true"
+                style={{ left: `calc(${12.5 + activeTrackingStep * 25}% - 14px)` }}
+              >
+                <Truck size={17} />
+              </div>
+              {TRACKING_STEPS.map((step, index) => {
+                const StepIcon = step.icon;
+                const isCurrent = index === activeTrackingStep;
+                const isCompleted = index <= activeTrackingStep;
+                return (
+                  <div key={step.label} style={{ position: 'relative', textAlign: 'center', color: isCompleted ? 'var(--primary)' : 'var(--text-light)' }}>
+                    <div style={{ width: '32px', height: '32px', margin: '0 auto 0.4rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isCurrent ? 'var(--primary)' : 'var(--bg-main)', color: isCurrent ? '#fff' : isCompleted ? 'var(--primary)' : 'var(--text-light)', border: `1px solid ${isCompleted ? 'var(--primary)' : 'var(--border-default)'}` }}>
+                      <StepIcon size={16} />
+                    </div>
+                    <span style={{ display: 'block', fontSize: '0.68rem', lineHeight: 1.25, fontWeight: isCurrent ? '700' : '500' }}>{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Calendar size={14} color="var(--primary)" /> Expected delivery: <strong>{selectedOrder.estimatedDelivery}</strong>
+            </p>
+          </div>
+        )}
+
         {orders.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '60vh', overflowY: 'auto' }}>
-            {orders.map((order) => (
+            {sortedOrders.map((order) => (
               <div
                 key={order.orderId}
                 style={{
@@ -48,14 +149,18 @@ export default function OrdersModal() {
                   padding: '1.25rem',
                 }}
               >
+                <button type="button" onClick={() => setSelectedOrderId(order.orderId)} style={{ display: 'block', width: '100%', textAlign: 'left', color: 'inherit' }} aria-label={`Track ${order.orderId}`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
                   <div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>
-                      ORDER NUMBER
+                      ORDER PLACED
                     </span>
                     <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>
                       {order.orderId}
                     </strong>
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                      {new Date(order.created_at || order.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald)', padding: '0.25rem 0.65rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: '700' }}>
@@ -94,10 +199,14 @@ export default function OrdersModal() {
                     <MapPin size={13} />
                     <span>Deliver to: {order.customer.city}, {order.customer.state}</span>
                   </div>
-                  <div>
-                    Total: <strong style={{ color: 'var(--text-main)', fontSize: '0.9375rem' }}>{formatPrice(order.total)}</strong>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.15rem' }}>
+                      {new Date(order.created_at || order.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </div>
+                    <div>Total: <strong style={{ color: 'var(--text-main)', fontSize: '0.9375rem' }}>{formatPrice(order.total)}</strong></div>
                   </div>
                 </div>
+                </button>
               </div>
             ))}
           </div>
