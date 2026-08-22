@@ -1,29 +1,34 @@
 import { MongoClient, type Db } from 'mongodb';
 
-const mongoUri = process.env.MONGODB_URI;
-
-if (!mongoUri) {
-  throw new Error('Missing MONGODB_URI environment variable');
-}
-
 const globalForMongo = globalThis as typeof globalThis & {
   mongoClientPromise?: Promise<MongoClient>;
 };
 
-const client = new MongoClient(mongoUri, {
-  maxPoolSize: 5,
-  minPoolSize: 0,
-  maxIdleTimeMS: 20000,
-  serverSelectionTimeoutMS: 5000,
-});
+export let mongoClientPromise: Promise<MongoClient> | undefined;
 
-export const mongoClientPromise = globalForMongo.mongoClientPromise ?? client.connect();
+export function getMongoClient(): Promise<MongoClient> {
+  const mongoUri = process.env.MONGODB_URI;
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForMongo.mongoClientPromise = mongoClientPromise;
+  if (!mongoUri) {
+    throw new Error('Missing MONGODB_URI environment variable');
+  }
+
+  if (!globalForMongo.mongoClientPromise) {
+    const client = new MongoClient(mongoUri, {
+      maxPoolSize: 5,
+      minPoolSize: 0,
+      maxIdleTimeMS: 20000,
+      serverSelectionTimeoutMS: 5000,
+    });
+
+    globalForMongo.mongoClientPromise = client.connect();
+  }
+
+  mongoClientPromise = globalForMongo.mongoClientPromise;
+  return mongoClientPromise;
 }
 
 export async function getMongoDb(): Promise<Db> {
-  const connectedClient = await mongoClientPromise;
+  const connectedClient = await getMongoClient();
   return connectedClient.db(process.env.MONGODB_DB_NAME || 'value_plus');
 }
