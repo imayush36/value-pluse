@@ -7,24 +7,30 @@ const globalForMongo = globalThis as typeof globalThis & {
 export let mongoClientPromise: Promise<MongoClient> | undefined;
 
 export function getMongoClient(): Promise<MongoClient> {
-  const mongoUri =
+  let mongoUri =
     process.env.MONGODB_URI ||
     process.env.NEXT_PUBLIC_MONGODB_URI ||
-    'mongodb+srv://ayush979430_db_user:afusIImbEIW1Jlpn@cluster0.gcikbaj.mongodb.net/';
+    'mongodb+srv://ayush979430_db_user:afusIImbEIW1Jlpn@cluster0.gcikbaj.mongodb.net/?retryWrites=true&w=majority';
 
-  if (!mongoUri) {
-    throw new Error('Missing MONGODB_URI environment variable');
+  if (!mongoUri.includes('retryWrites=')) {
+    mongoUri += (mongoUri.includes('?') ? '&' : '?') + 'retryWrites=true&w=majority';
   }
 
   if (!globalForMongo.mongoClientPromise) {
     const client = new MongoClient(mongoUri, {
-      maxPoolSize: 5,
+      maxPoolSize: 10,
       minPoolSize: 0,
-      maxIdleTimeMS: 20000,
-      serverSelectionTimeoutMS: 5000,
+      maxIdleTimeMS: 30000,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      tls: true,
+      family: 4,
     });
 
-    globalForMongo.mongoClientPromise = client.connect();
+    globalForMongo.mongoClientPromise = client.connect().catch((err) => {
+      globalForMongo.mongoClientPromise = undefined;
+      throw err;
+    });
   }
 
   mongoClientPromise = globalForMongo.mongoClientPromise;
