@@ -144,21 +144,23 @@ export default function ProductCard({ product }) {
         {/* Action Buttons */}
         <div className="vp-card-actions-row">
           <button
+            type="button"
             className="btn btn-vp-view"
             onClick={openDetails}
             title="View full specifications"
           >
             <Eye size={14} />
-            View Details
+            <span>View Details</span>
           </button>
 
           <button
+            type="button"
             className="btn btn-vp-cart"
             onClick={handleAddToCart}
             title="Add product to shopping cart"
           >
-            <ShoppingBag size={14} />
-            Add to Cart
+            <ShoppingBag size={15} />
+            <span>Add to Cart</span>
           </button>
         </div>
       </div>
