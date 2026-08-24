@@ -143,18 +143,81 @@ export default function Navbar() {
         <div className="container">
           <div className="main-header-inner">
 
-            {/* Logo */}
-            <a
-              href="#home"
-              className="nav-brand-vp"
-              onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}
-            >
-              <div className="brand-logo-badge">
-                <span className="brand-text-value">VALUE</span>
-                <span className="brand-text-plus">PLUS</span>
+            {/* Logo & Mobile Quick Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 'none' }} className="nav-brand-row">
+              <a
+                href="#home"
+                className="nav-brand-vp"
+                onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}
+              >
+                <div className="brand-logo-badge">
+                  <span className="brand-text-value">VALUE</span>
+                  <span className="brand-text-plus">PLUS</span>
+                </div>
+                <span className="brand-subtext">ELECTRONICS MEGASTORE</span>
+              </a>
+
+              {/* Mobile Quick Login & Cart Buttons */}
+              <div className="mobile-quick-actions-box" style={{ display: 'none', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAuthModalOpen(true)}
+                  style={{
+                    background: isAuthenticated ? '#f0fdf4' : '#eff6ff',
+                    border: isAuthenticated ? '1px solid #bbf7d0' : '1px solid #bfdbfe',
+                    color: isAuthenticated ? '#15803d' : '#0a6cdc',
+                    borderRadius: '20px',
+                    padding: '5px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <UserRound size={15} />
+                  <span>{isAuthenticated ? (currentUser?.fullName?.split(' ')[0] || 'Account') : 'Login'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-main)',
+                    position: 'relative',
+                    padding: '6px',
+                    cursor: 'pointer',
+                  }}
+                  aria-label="Open Cart"
+                >
+                  <ShoppingBag size={22} />
+                  {cartCount > 0 && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        background: '#0a6cdc',
+                        color: '#ffffff',
+                        fontSize: '0.65rem',
+                        fontWeight: '800',
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
               </div>
-              <span className="brand-subtext">ELECTRONICS MEGASTORE</span>
-            </a>
+            </div>
 
             {/* Search Bar (desktop) */}
             <div className="header-search-container">
@@ -228,7 +291,7 @@ export default function Navbar() {
                 <UserRound size={20} />
                 <div className="action-text-block">
                   <span className="action-sub">{isAuthenticated ? 'Hi' : 'Sign in'}</span>
-                  <span className="action-main">{isAuthenticated ? currentUser.fullName.split(' ')[0] : 'Account'}</span>
+                  <span className="action-main">{isAuthenticated ? (currentUser.fullName ? currentUser.fullName.split(' ')[0] : 'Account') : 'Login'}</span>
                 </div>
               </button>
 

@@ -21,6 +21,7 @@ import {
   Sparkles,
   ChevronRight,
   Flame,
+  UserRound,
 } from 'lucide-react';
 
 const iconMap = {
@@ -43,6 +44,9 @@ export default function BottomNavBar() {
     setIsCartOpen,
     setIsWishlistOpen,
     setIsOrdersModalOpen,
+    setIsAuthModalOpen,
+    currentUser,
+    isAuthenticated,
     setSelectedCategory,
     setSelectedProduct,
     setSearchQuery,
@@ -121,20 +125,19 @@ export default function BottomNavBar() {
           <span className="bottom-nav-label" style={{ color: '#ffffff' }}>Cart</span>
         </button>
 
-        {/* Wishlist */}
+        {/* Account / Login */}
         <button
           type="button"
           className="bottom-nav-btn"
-          onClick={() => { setIsWishlistOpen(true); setShowCategorySheet(false); }}
-          aria-label="Wishlist"
+          onClick={() => { setIsAuthModalOpen(true); setShowCategorySheet(false); }}
+          aria-label="Account"
         >
-          <span className="bottom-nav-icon" style={{ position: 'relative' }}>
-            <Heart size={22} />
-            {wishlist.length > 0 && (
-              <span className="bottom-nav-mini-badge">{wishlist.length}</span>
-            )}
+          <span className="bottom-nav-icon">
+            <UserRound size={22} color={isAuthenticated ? '#10b981' : 'currentColor'} />
           </span>
-          <span className="bottom-nav-label">Wishlist</span>
+          <span className="bottom-nav-label" style={{ color: isAuthenticated ? '#10b981' : 'inherit' }}>
+            {isAuthenticated ? (currentUser?.fullName?.split(' ')[0] || 'Account') : 'Login'}
+          </span>
         </button>
 
         {/* Orders */}

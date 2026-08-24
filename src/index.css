@@ -4095,6 +4095,12 @@ img {
   font-size: 0.9rem;
 }
 
+@media (max-width: 768px) {
+  .mobile-quick-actions-box {
+    display: flex !important;
+  }
+}
+
 @media (max-width: 480px) {
   .mobile-frame {
     width: min(100%, 100vw);
@@ -4111,4 +4117,5 @@ img {
     padding: 18px 16px 22px;
   }
 }
+
 

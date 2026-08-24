@@ -81,20 +81,13 @@ export const ShopProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return undefined;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) {
-        const user = data.session.user;
-        setCurrentUser({ id: user.id, fullName: user.user_metadata?.fullName || 'Valued Customer', email: user.email, phone: user.user_metadata?.phone || '' });
-      }
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user;
-      setCurrentUser(user ? { id: user.id, fullName: user.user_metadata?.fullName || 'Valued Customer', email: user.email, phone: user.user_metadata?.phone || '' } : null);
-    });
-    return () => authListener.subscription.unsubscribe();
+    // Fresh guest initialization: verify local session
+    const localSession = storage.getSession();
+    if (localSession && localSession.email) {
+      setCurrentUser(localSession);
+    } else {
+      setCurrentUser(null);
+    }
   }, []);
 
   useEffect(() => {
