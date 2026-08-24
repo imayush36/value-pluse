@@ -3,8 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { HERO_SLIDES, VALUE_PLUS_CATEGORIES } from '../data/products';
 import {
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   Truck,
   ShieldCheck,
@@ -138,22 +136,6 @@ export default function Hero() {
               </button>
             </div>
           </div>
-
-          {/* Prev / Next Arrows */}
-          <button
-            className="carousel-arrow-btn arrow-prev"
-            onClick={handlePrev}
-            aria-label="Previous Slide"
-          >
-            <ChevronLeft size={22} />
-          </button>
-          <button
-            className="carousel-arrow-btn arrow-next"
-            onClick={handleNext}
-            aria-label="Next Slide"
-          >
-            <ChevronRight size={22} />
-          </button>
 
           {/* Dots Indicator */}
           <div className="carousel-dots-wrapper">
