@@ -473,11 +473,30 @@ export const ShopProvider = ({ children }) => {
   // Order Placement
   const placeOrder = async (customerDetails, items, totals) => {
     const orderId = 'VP-' + Math.floor(100000 + Math.random() * 900000);
+
+    const enrichedItems = (items || []).map((item) => ({
+      id: item.id,
+      name: item.name || item.title || 'Value Plus Product',
+      productName: item.name || item.title || 'Value Plus Product',
+      brand: item.brand || '',
+      category: item.category || '',
+      price: item.price || 0,
+      quantity: item.quantity || 1,
+      image: item.image || item.images?.[0] || '',
+    }));
+
+    const productNamesList = enrichedItems.map((i) => i.name).filter(Boolean);
+    const productNames = productNamesList.join(', ');
+    const primaryProductName = enrichedItems[0]?.name || 'Value Plus Product';
+
     const orderData = {
       orderId,
       date: new Date().toISOString(),
       customer: customerDetails,
-      items: items,
+      items: enrichedItems,
+      productNames,
+      primaryProductName,
+      totalItemsCount: enrichedItems.reduce((acc, curr) => acc + (curr.quantity || 1), 0),
       subtotal: totals.subtotal,
       delivery: totals.delivery,
       discount: totals.discount || 0,
@@ -507,7 +526,7 @@ export const ShopProvider = ({ children }) => {
         }),
       });
       const orderJson = await orderRes.json();
-      console.log('MongoDB /api/orders response:', orderJson);
+      console.log('MongoDB /api/orders response with product names:', orderJson);
     } catch (e) {
       console.error('MongoDB order sync warning:', e);
     }

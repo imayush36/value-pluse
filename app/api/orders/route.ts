@@ -13,6 +13,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Invalid order data' }, { status: 400 });
     }
 
+    // Format and guarantee product names in every item
+    const formattedItems = (orderData.items || []).map((item: any) => ({
+      id: item.id || '',
+      name: item.name || item.productName || item.title || 'Value Plus Electronic Item',
+      productName: item.productName || item.name || item.title || 'Value Plus Electronic Item',
+      brand: item.brand || '',
+      category: item.category || '',
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+      image: item.image || item.images?.[0] || '',
+    }));
+
+    const productNamesList = formattedItems.map((i: any) => i.name).filter(Boolean);
+    const productNames = productNamesList.join(', ');
+    const primaryProductName = formattedItems[0]?.name || 'Value Plus Product';
+
     const db = await getMongoDb();
     const ordersCollection = db.collection('orders');
 
@@ -21,6 +37,10 @@ export async function POST(req: NextRequest) {
       {
         $set: {
           ...orderData,
+          items: formattedItems,
+          productNames: orderData.productNames || productNames,
+          primaryProductName: orderData.primaryProductName || primaryProductName,
+          productName: orderData.primaryProductName || primaryProductName,
           updatedAt: new Date(),
         },
         $setOnInsert: {
