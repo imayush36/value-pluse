@@ -38,6 +38,7 @@ export default function Navbar() {
     setIsAuthModalOpen,
     isAuthenticated,
     currentUser,
+    openPolicy,
   } = useShop();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -113,10 +114,10 @@ export default function Navbar() {
       {/* ── TOP UTILITY BAR (desktop only) ── */}
       <div className="top-utility-bar">
         <div className="container top-utility-inner">
-          <div className="top-announcement">
+          <div className="top-announcement" onClick={() => openPolicy('shipping')} style={{ cursor: 'pointer' }}>
             <span className="live-dot" />
             <span>
-              <strong>Value Plus Megastore:</strong> Same-Day Express Delivery in UP &amp; NCR | 100% Genuine Brand Warranty
+              <strong>Value Plus Megastore:</strong> Same-Day Delivery in UP &amp; NCR | <span style={{ textDecoration: 'underline' }}>7-Day Replacement &amp; Shipping Policies</span>
             </span>
           </div>
           <div className="top-utility-links">
@@ -129,9 +130,9 @@ export default function Navbar() {
               <Phone size={13} color="var(--primary)" />
               <span>1800-123-VALUE</span>
             </a>
-            <button type="button" className="top-link-btn" onClick={() => scrollToSection('why-us-section')}>
+            <button type="button" className="top-link-btn" onClick={() => openPolicy('returns')}>
               <Store size={13} color="var(--primary)" />
-              <span>50+ Stores</span>
+              <span>Store Policies</span>
             </button>
           </div>
         </div>

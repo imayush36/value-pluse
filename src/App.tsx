@@ -19,15 +19,14 @@ import OrdersModal from './components/OrdersModal';
 import PincodeModal from './components/PincodeModal';
 import Toast from './components/Toast';
 import AuthModal from './components/AuthModal';
+import PolicyModal from './components/PolicyModal';
 import SidebarNav from './components/SidebarNav';
 
 function MainAppContent() {
   const { selectedProduct } = useShop();
 
   return (
-    <div className="app-layout app-layout-with-sidebar">
-      <SidebarNav />
-
+    <div className="app-layout">
       {/* Sticky Desktop Header Navbar */}
       <Navbar />
 
@@ -60,6 +59,7 @@ function MainAppContent() {
       <OrdersModal />
       <PincodeModal />
       <AuthModal />
+      <PolicyModal />
       <Toast />
 
       {/* Mobile App-Style Bottom Navigation Bar */}

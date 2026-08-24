@@ -3932,10 +3932,35 @@ img {
   padding-left: 42px;
 }
 
+.password-wrap input {
+  padding-right: 42px;
+}
+
 .input-icon {
   position: absolute;
   left: 14px;
   color: #64748b;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.form-error {
+  margin-top: -4px;
+  font-size: 0.8rem;
+  color: #d93025;
+  font-weight: 700;
 }
 
 .auth-form {

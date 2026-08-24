@@ -12,6 +12,11 @@ import {
   AlertCircle,
   Lock,
   Building2,
+  UserCheck,
+  LogIn,
+  RotateCcw,
+  RefreshCw,
+  FileText,
 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -24,6 +29,10 @@ export default function Checkout() {
     buyNowItem,
     setBuyNowItem,
     placeOrder,
+    currentUser,
+    setIsAuthModalOpen,
+    setAuthModalReason,
+    openPolicy,
     deliveryPincode,
     deliveryCity,
     formatPrice,
@@ -33,17 +42,28 @@ export default function Checkout() {
   const modalRef = useRef(null);
   const overlayRef = useRef(null);
 
-  // Form Fields
+  // Form Fields pre-filled with registered user data
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
+    fullName: currentUser?.fullName || '',
+    phone: currentUser?.phone || '',
+    email: currentUser?.email || '',
     address: '',
     city: deliveryCity ? deliveryCity.split(',')[0] : 'Noida',
     state: 'Uttar Pradesh',
     pincode: deliveryPincode || '201301',
-    paymentMethod: 'upi', // 'upi', 'card', 'cod'
+    paymentMethod: 'upi', // 'upi', 'card', 'cod', 'netbanking'
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || currentUser.fullName || '',
+        phone: prev.phone || currentUser.phone || '',
+        email: prev.email || currentUser.email || '',
+      }));
+    }
+  }, [currentUser]);
 
   const [formErrors, setFormErrors] = useState({});
   const [couponCode, setCouponCode] = useState('');
@@ -138,6 +158,14 @@ export default function Checkout() {
 
   const handleSubmitOrder = (e) => {
     e.preventDefault();
+
+    if (!currentUser) {
+      setAuthModalReason('checkout');
+      setIsAuthModalOpen(true);
+      showToast('Please login or register to complete your order', 'error');
+      return;
+    }
+
     if (!validateForm()) {
       showToast('Please fill all required delivery details', 'error');
       return;
@@ -172,24 +200,76 @@ export default function Checkout() {
           <X size={20} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
           <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
             <Lock size={19} />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)' }}>
+            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', color: 'var(--text-main)' }}>
               Value Plus Secure Checkout
             </h2>
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-              100% Frontend static demo order simulation — No real payment charged.
+              100% Genuine electronics with official GST tax invoice &amp; brand warranty.
             </p>
           </div>
         </div>
 
+        {/* Registered Customer Status Bar */}
+        {currentUser ? (
+          <div
+            style={{
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: '10px',
+              padding: '0.65rem 0.95rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.8125rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534', fontWeight: '700' }}>
+              <UserCheck size={16} color="#15803d" />
+              <span>Verified Customer: {currentUser.fullName} ({currentUser.email})</span>
+            </div>
+            <span style={{ color: '#15803d', fontSize: '0.75rem', fontWeight: '600' }}>● OTP Verified Account</span>
+          </div>
+        ) : (
+          <div
+            style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '10px',
+              padding: '0.85rem 1rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.85rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: '600' }}>
+              <AlertCircle size={18} color="#dc2626" />
+              <span>Customer Registration is required to place an order.</span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                setAuthModalReason('checkout');
+                setIsAuthModalOpen(true);
+              }}
+            >
+              <LogIn size={14} /> Log In / Register with OTP
+            </button>
+          </div>
+        )}
+
         <div className="checkout-grid">
           {/* Left Form */}
           <form onSubmit={handleSubmitOrder}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.5rem' }}>
               1. Delivery &amp; Contact Details
             </h3>
 
@@ -317,8 +397,8 @@ export default function Checkout() {
             </div>
 
             {/* Payment Method */}
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '1.5rem 0 0.75rem 0', color: 'var(--text-main)', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.5rem' }}>
-              2. Demo Payment Method
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '1.5rem 0 0.75rem 0', color: 'var(--text-main)', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.5rem' }}>
+              2. Payment Method
             </h3>
 
             <div className="payment-options-grid">
@@ -327,8 +407,8 @@ export default function Checkout() {
                 onClick={() => setFormData({ ...formData, paymentMethod: 'upi' })}
               >
                 <Smartphone size={20} style={{ margin: '0 auto 0.35rem auto' }} />
-                <div style={{ fontSize: '0.8125rem', fontWeight: '700' }}>UPI / GPay / Paytm</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Demo Instant QR</div>
+                <div style={{ fontSize: '0.8125rem', fontWeight: '700' }}>UPI / QR / GPay</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Instant QR &amp; Apps</div>
               </div>
 
               <div
@@ -337,7 +417,7 @@ export default function Checkout() {
               >
                 <CreditCard size={20} style={{ margin: '0 auto 0.35rem auto' }} />
                 <div style={{ fontSize: '0.8125rem', fontWeight: '700' }}>Credit / Debit Card</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Visa / Mastercard / RuPay</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Visa, Master, RuPay</div>
               </div>
 
               <div
@@ -356,7 +436,7 @@ export default function Checkout() {
               style={{ width: '100%', marginTop: '1.75rem' }}
             >
               <ShieldCheck size={18} />
-              PLACE ORDER ({formatPrice(grandTotal)})
+              CONFIRM &amp; PLACE ORDER ({formatPrice(grandTotal)})
             </button>
           </form>
 
@@ -435,15 +515,31 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Guarantees */}
+            {/* Guarantees & Policy Links */}
             <div style={{ marginTop: '1.25rem', background: '#ffffff', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-default)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                 <Check size={14} color="var(--accent-emerald)" />
-                <span>GST Tax Invoice &amp; Official Brand Warranty Included</span>
+                <span>GST Tax Invoice &amp; 100% Brand Warranty</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                <Check size={14} color="var(--accent-emerald)" />
+                <button
+                  type="button"
+                  onClick={() => openPolicy('returns')}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', font: 'inherit' }}
+                >
+                  Value Plus 7-Day Replacement Guarantee
+                </button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Check size={14} color="var(--accent-emerald)" />
-                <span>Value Plus 7-Day Replacement Guarantee</span>
+                <button
+                  type="button"
+                  onClick={() => openPolicy('shipping')}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', font: 'inherit' }}
+                >
+                  Value Plus Express Shipping Policy
+                </button>
               </div>
             </div>
           </div>

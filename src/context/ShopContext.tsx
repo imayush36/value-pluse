@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { storage } from '../utils/storage';
 import { PRODUCTS } from '../data/products';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
@@ -28,9 +28,23 @@ export const ShopProvider = ({ children }) => {
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isPincodeModalOpen, setIsPincodeModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalReason, setAuthModalReason] = useState(null); // 'checkout' | null
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [lastPlacedOrder, setLastPlacedOrder] = useState(null);
   const [buyNowItem, setBuyNowItem] = useState(null);
+
+  // Policy Modal State: { isOpen: boolean, activeTab: 'shipping' | 'privacy' | 'refund' | 'returns' }
+  const [policyModalState, setPolicyModalState] = useState({
+    isOpen: false,
+    activeTab: 'shipping',
+  });
+
+  // Pending post-authentication action
+  const postAuthActionRef = useRef(null);
+
+  // OTP Verification State for Registration
+  const [pendingRegistration, setPendingRegistration] = useState(null);
+  const [generatedOtp, setGeneratedOtp] = useState('');
 
   // Delivery Location / Pincode
   const [deliveryPincode, setDeliveryPincode] = useState(() => {
@@ -58,19 +72,27 @@ export const ShopProvider = ({ children }) => {
   // Toasts
   const [toasts, setToasts] = useState([]);
 
+  const showToast = (message, type = 'success', duration = 3500) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+  };
+
   useEffect(() => {
     if (!isSupabaseConfigured) return undefined;
 
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         const user = data.session.user;
-        setCurrentUser({ id: user.id, fullName: user.user_metadata.fullName, email: user.email, phone: user.user_metadata.phone });
+        setCurrentUser({ id: user.id, fullName: user.user_metadata?.fullName || 'Valued Customer', email: user.email, phone: user.user_metadata?.phone || '' });
       }
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user;
-      setCurrentUser(user ? { id: user.id, fullName: user.user_metadata.fullName, email: user.email, phone: user.user_metadata.phone } : null);
+      setCurrentUser(user ? { id: user.id, fullName: user.user_metadata?.fullName || 'Valued Customer', email: user.email, phone: user.user_metadata?.phone || '' } : null);
     });
     return () => authListener.subscription.unsubscribe();
   }, []);
@@ -80,78 +102,296 @@ export const ShopProvider = ({ children }) => {
       setOrders([]);
       return;
     }
-    if (!isSupabaseConfigured || !currentUser?.id) {
-      setOrders(storage.getOrders().filter((order) => order.customer?.email?.toLowerCase() === currentUser.email.toLowerCase()));
-      return;
-    }
-    const loadCustomerOrders = () => supabase.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (!error && data) {
-        setOrders(data.map((order) => ({ ...order, orderId: order.order_id, estimatedDelivery: order.estimated_delivery })));
-      }
-    });
-    loadCustomerOrders();
-    const ordersChannel = supabase
-      .channel(`customer-orders-${currentUser.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${currentUser.id}` }, loadCustomerOrders)
-      .subscribe();
-    return () => supabase.removeChannel(ordersChannel);
-  }, [currentUser?.id]);
 
-  const register = async (userData) => {
+    const loadOrdersFromDbAndStorage = async () => {
+      // 1. Initial load from local storage
+      const local = storage.getOrders().filter((order) => order.customer?.email?.toLowerCase() === currentUser.email.toLowerCase());
+      setOrders(local);
+
+      // 2. Fetch from MongoDB API
+      try {
+        const res = await fetch(`/api/orders?email=${encodeURIComponent(currentUser.email)}`);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.orders) && json.orders.length > 0) {
+          // Merge MongoDB orders with local orders
+          const map = new Map();
+          json.orders.forEach((o) => map.set(o.orderId, o));
+          local.forEach((o) => { if (!map.has(o.orderId)) map.set(o.orderId, o); });
+          const merged = Array.from(map.values()).sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+          setOrders(merged);
+        }
+      } catch (err) {
+        console.error('MongoDB orders fetch fallback to local:', err);
+      }
+    };
+
+    loadOrdersFromDbAndStorage();
+
+    if (isSupabaseConfigured && currentUser?.id) {
+      const loadCustomerOrders = () => supabase.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).then(({ data, error }) => {
+        if (!error && data) {
+          setOrders(data.map((order) => ({ ...order, orderId: order.order_id, estimatedDelivery: order.estimated_delivery })));
+        }
+      });
+      loadCustomerOrders();
+      const ordersChannel = supabase
+        .channel(`customer-orders-${currentUser.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${currentUser.id}` }, loadCustomerOrders)
+        .subscribe();
+      return () => supabase.removeChannel(ordersChannel);
+    }
+  }, [currentUser?.id, currentUser?.email]);
+
+  // Execute pending actions after successful login/registration
+  const handleAuthSuccess = (user) => {
+    if (postAuthActionRef.current) {
+      const callback = postAuthActionRef.current;
+      postAuthActionRef.current = null;
+      callback(user);
+    }
+    setAuthModalReason(null);
+  };
+
+  // Step 1 of Registration: Validate details and Generate 6-Digit OTP via /api/auth/otp
+  const requestRegistrationOtp = async (userData) => {
     const email = userData.email.trim().toLowerCase();
     const phone = userData.phone.trim();
-    if (userData.password.length < 6) {
-      return { success: false, message: 'Password must be at least 6 characters.' };
+    const fullName = userData.fullName.trim();
+
+    if (!fullName) {
+      return { success: false, message: 'Please enter your full name.' };
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { success: false, message: 'Please enter a valid email address.' };
     }
     if (!/^[0-9]{10}$/.test(phone)) {
       return { success: false, message: 'Please enter a valid 10-digit mobile number.' };
     }
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: userData.password,
-        options: { data: { fullName: userData.fullName.trim(), phone } },
-      });
-      if (error) return { success: false, message: error.message };
-      showToast('Account created. Check your email to verify it.');
-      return { success: true };
+    if (!userData.password || userData.password.length < 6) {
+      return { success: false, message: 'Password must be at least 6 characters.' };
     }
+
     if (storage.getUsers().some((user) => user.email === email)) {
-      return { success: false, message: 'An account with this email already exists.' };
+      return { success: false, message: 'An account with this email already exists. Please log in.' };
     }
-    const user = { fullName: userData.fullName.trim(), email, phone };
-    storage.saveUsers([...storage.getUsers(), { ...user, password: userData.password }]);
+
+    let otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Call Backend /api/auth/otp to send OTP & show in Network Tab
+    try {
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          phone,
+          email,
+          fullName,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.otp) {
+        otp = data.otp;
+      }
+    } catch (err) {
+      console.error('OTP API fetch warning:', err);
+    }
+
+    setGeneratedOtp(otp);
+    setPendingRegistration({ ...userData, email, phone, fullName });
+
+    showToast(`🔑 [Value Plus OTP] Your verification code is: ${otp}`, 'success', 8000);
+
+    return { success: true, otp };
+  };
+
+  // Step 2 of Registration: Verify OTP and finalize account registration
+  const verifyOtpAndRegister = async (enteredOtp) => {
+    if (!pendingRegistration) {
+      return { success: false, message: 'No registration in progress. Please fill details again.' };
+    }
+
+    const { fullName, email, phone, password } = pendingRegistration;
+
+    // Call Backend /api/auth/otp to verify
+    try {
+      const verifyRes = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          phone,
+          otp: enteredOtp.trim(),
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyData.success) {
+        return { success: false, message: verifyData.message || 'Invalid OTP code.' };
+      }
+    } catch (err) {
+      if (enteredOtp.trim() !== generatedOtp.trim()) {
+        return { success: false, message: 'Invalid OTP code. Please enter the 6-digit code shown or request a new one.' };
+      }
+    }
+
+    const user = { fullName, email, phone };
+    storage.saveUsers([...storage.getUsers(), { ...user, password }]);
     storage.saveSession(user);
     setCurrentUser(user);
-    showToast('Account created successfully');
+
+    // Primary: Sync and save user directly to MongoDB database
+    try {
+      const apiRes = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...user, password }),
+      });
+      const apiData = await apiRes.json();
+      console.log('MongoDB /api/users response:', apiData);
+    } catch (e) {
+      console.error('MongoDB user sync warning:', e);
+    }
+
+    // Optional Supabase sync if enabled
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { fullName, phone } },
+        });
+      } catch (err) {
+        console.warn('Supabase optional sync warning:', err);
+      }
+    }
+
+    setPendingRegistration(null);
+    setGeneratedOtp('');
+    setIsAuthModalOpen(false);
+
+    showToast(`🎉 Registration verified! Welcome to Value Plus, ${fullName}!`);
+    handleAuthSuccess(user);
+
     return { success: true };
   };
 
+  // Resend OTP code via /api/auth/otp
+  const resendRegistrationOtp = async () => {
+    if (!pendingRegistration) return null;
+    let otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    try {
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'resend',
+          phone: pendingRegistration.phone,
+          email: pendingRegistration.email,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.otp) {
+        otp = data.otp;
+      }
+    } catch (err) {
+      console.error('Resend OTP API warning:', err);
+    }
+
+    setGeneratedOtp(otp);
+    showToast(`📲 [New OTP] Your verification code is: ${otp}`, 'info', 8000);
+    return otp;
+  };
+
   const login = async (email, password) => {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-      if (error) return { success: false, message: error.message };
-      const user = data.user;
-      setCurrentUser({ id: user.id, fullName: user.user_metadata.fullName, email: user.email, phone: user.user_metadata.phone });
-      showToast('Welcome back to Value Plus');
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Try MongoDB API login
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', email: cleanEmail, password }),
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        const sessionUser = {
+          fullName: data.user.fullName || 'Valued Customer',
+          email: data.user.email,
+          phone: data.user.phone || '',
+        };
+        storage.saveSession(sessionUser);
+        setCurrentUser(sessionUser);
+        setIsAuthModalOpen(false);
+        showToast(`Welcome back, ${sessionUser.fullName}!`);
+        handleAuthSuccess(sessionUser);
+        return { success: true };
+      }
+    } catch (e) {
+      console.error('MongoDB login error, checking local fallback:', e);
+    }
+
+    // 2. Local storage fallback login
+    const localUser = storage.getUsers().find((item) => item.email === cleanEmail && item.password === password);
+    if (localUser) {
+      const sessionUser = { fullName: localUser.fullName, email: localUser.email, phone: localUser.phone };
+      storage.saveSession(sessionUser);
+      setCurrentUser(sessionUser);
+      setIsAuthModalOpen(false);
+      showToast(`Welcome back, ${localUser.fullName}`);
+      handleAuthSuccess(sessionUser);
       return { success: true };
     }
-    const user = storage.getUsers().find((item) => item.email === email.trim().toLowerCase() && item.password === password);
-    if (!user) {
-      return { success: false, message: 'Incorrect email or password.' };
-    }
-    const sessionUser = { fullName: user.fullName, email: user.email, phone: user.phone };
-    storage.saveSession(sessionUser);
-    setCurrentUser(sessionUser);
-    showToast('Welcome back to Value Plus');
-    return { success: true };
+
+    return { success: false, message: 'Incorrect email or password. Please verify or register.' };
   };
 
   const logout = async () => {
     if (isSupabaseConfigured) await supabase.auth.signOut();
     storage.clearSession();
     setCurrentUser(null);
+    setOrders([]);
     showToast('You have been logged out', 'info');
+  };
+
+  // Policy Modal Control
+  const openPolicy = (activeTab = 'shipping') => {
+    setPolicyModalState({ isOpen: true, activeTab });
+  };
+
+  const closePolicy = () => {
+    setPolicyModalState((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  // Guard to ensure Customer is Registered & Logged In before Checkout
+  const requireAuthToProceed = (actionCallback, reason = 'checkout') => {
+    if (currentUser) {
+      actionCallback(currentUser);
+    } else {
+      postAuthActionRef.current = actionCallback;
+      setAuthModalReason(reason);
+      setIsCartOpen(false);
+      setIsAuthModalOpen(true);
+      showToast('🔒 Please Register or Log in to proceed with your order', 'info', 4500);
+    }
+  };
+
+  // Buy Now Flow with registration requirement
+  const handleBuyNow = (product, quantity = 1) => {
+    const item = { ...product, quantity };
+    requireAuthToProceed((_user) => {
+      setBuyNowItem(item);
+      setIsCheckoutOpen(true);
+    }, 'checkout');
+  };
+
+  // Proceed to checkout from cart with registration requirement
+  const handleProceedToCheckoutFromCart = () => {
+    requireAuthToProceed((_user) => {
+      setBuyNowItem(null);
+      setIsCartOpen(false);
+      setIsCheckoutOpen(true);
+    }, 'checkout');
   };
 
   // Save changes to localStorage
@@ -176,14 +416,6 @@ export const ShopProvider = ({ children }) => {
     setIsPincodeModalOpen(false);
   };
 
-  const showToast = (message, type = 'success') => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3200);
-  };
-
   // Cart Functions
   const addToCart = (product, quantity = 1) => {
     setCart((prevCart) => {
@@ -195,7 +427,7 @@ export const ShopProvider = ({ children }) => {
       }
       return [...prevCart, { ...product, quantity }];
     });
-    showToast(`✓ "${product.name.slice(0, 32)}..." added to cart!`);
+    showToast(`✓ "${product.name.slice(0, 30)}..." added to cart!`);
   };
 
   const updateQuantity = (productId, delta) => {
@@ -238,12 +470,6 @@ export const ShopProvider = ({ children }) => {
     return wishlist.some((item) => item.id === productId);
   };
 
-  // Buy Now Flow
-  const handleBuyNow = (product, quantity = 1) => {
-    setBuyNowItem({ ...product, quantity });
-    setIsCheckoutOpen(true);
-  };
-
   // Order Placement
   const placeOrder = async (customerDetails, items, totals) => {
     const orderId = 'VP-' + Math.floor(100000 + Math.random() * 900000);
@@ -267,8 +493,25 @@ export const ShopProvider = ({ children }) => {
     const updatedOrders = storage.saveOrder(orderData);
     const customerOrders = isSupabaseConfigured
       ? [orderData, ...orders.filter((order) => order.orderId !== orderData.orderId)]
-      : updatedOrders.filter((order) => order.customer?.email?.toLowerCase() === customerDetails.email.toLowerCase());
+      : updatedOrders.filter((order) => order.customer?.email?.toLowerCase() === (currentUser?.email || customerDetails.email).toLowerCase());
     setOrders(customerOrders);
+
+    // Save directly to MongoDB Database
+    try {
+      const orderRes = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...orderData,
+          userId: currentUser?.id || null,
+        }),
+      });
+      const orderJson = await orderRes.json();
+      console.log('MongoDB /api/orders response:', orderJson);
+    } catch (e) {
+      console.error('MongoDB order sync warning:', e);
+    }
+
     if (isSupabaseConfigured && currentUser?.id) {
       const { error } = await supabase.from('orders').insert({
         user_id: currentUser.id,
@@ -282,8 +525,9 @@ export const ShopProvider = ({ children }) => {
         status: orderData.status,
         estimated_delivery: orderData.estimatedDelivery,
       });
-      if (error) showToast('Order saved locally, but cloud sync failed.', 'error');
+      if (error) showToast('Order saved locally & MongoDB, but Supabase sync failed.', 'info');
     }
+
     setLastPlacedOrder(orderData);
 
     // If it was regular cart checkout, clear cart
@@ -293,6 +537,31 @@ export const ShopProvider = ({ children }) => {
     setBuyNowItem(null);
     setIsCheckoutOpen(false);
     setIsOrderSuccessOpen(true);
+  };
+
+  // Cancel Order handler
+  const cancelOrder = async (orderId) => {
+    const allStored = storage.getOrders();
+    const updated = allStored.map((ord) => ord.orderId === orderId ? { ...ord, status: 'Cancelled' } : ord);
+    try {
+      localStorage.setItem('valueplus_orders', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setOrders((prev) => prev.map((ord) => ord.orderId === orderId ? { ...ord, status: 'Cancelled' } : ord));
+
+    // Update in MongoDB
+    try {
+      fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status: 'Cancelled' }),
+      }).catch((e) => console.error('MongoDB cancel update warning:', e));
+    } catch (e) {
+      console.error(e);
+    }
+
+    showToast(`Order ${orderId} has been cancelled successfully. Refund initiated.`, 'info');
   };
 
   // Format INR Price helper
@@ -328,6 +597,11 @@ export const ShopProvider = ({ children }) => {
         setIsPincodeModalOpen,
         isAuthModalOpen,
         setIsAuthModalOpen,
+        authModalReason,
+        setAuthModalReason,
+        policyModalState,
+        openPolicy,
+        closePolicy,
         selectedProduct,
         setSelectedProduct,
         buyNowItem,
@@ -355,10 +629,18 @@ export const ShopProvider = ({ children }) => {
         toggleWishlist,
         isWishlisted,
         handleBuyNow,
+        handleProceedToCheckoutFromCart,
+        requireAuthToProceed,
         placeOrder,
+        cancelOrder,
         login,
-        register,
         logout,
+        requestRegistrationOtp,
+        verifyOtpAndRegister,
+        resendRegistrationOtp,
+        pendingRegistration,
+        setPendingRegistration,
+        generatedOtp,
         formatPrice,
       }}
     >
@@ -374,3 +656,4 @@ export const useShop = () => {
   }
   return context;
 };
+

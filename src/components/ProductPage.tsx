@@ -39,6 +39,7 @@ export default function ProductPage() {
     formatPrice,
     showToast,
     setSelectedCategory,
+    openPolicy,
   } = useShop();
 
   const [quantity, setQuantity] = useState(1);
@@ -174,7 +175,7 @@ export default function ProductPage() {
 
             {/* Value Plus Store Guarantees Banner */}
             <div className="product-page-trust-card">
-              <div className="trust-card-row">
+              <div className="trust-card-row" onClick={() => openPolicy('returns')} style={{ cursor: 'pointer' }}>
                 <ShieldCheck size={20} color="var(--accent-emerald)" />
                 <div>
                   <strong>100% Genuine Brand Warranty</strong>
@@ -182,7 +183,7 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              <div className="trust-card-row">
+              <div className="trust-card-row" onClick={() => openPolicy('shipping')} style={{ cursor: 'pointer' }}>
                 <Truck size={20} color="var(--primary)" />
                 <div>
                   <strong>Express Doorstep Delivery</strong>
@@ -190,7 +191,7 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              <div className="trust-card-row">
+              <div className="trust-card-row" onClick={() => openPolicy('returns')} style={{ cursor: 'pointer' }}>
                 <RotateCcw size={20} color="var(--accent-amber)" />
                 <div>
                   <strong>7-Day Replacement Guarantee</strong>
@@ -198,7 +199,7 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              <div className="trust-card-row">
+              <div className="trust-card-row" onClick={() => openPolicy('shipping')} style={{ cursor: 'pointer' }}>
                 <Store size={20} color="var(--primary)" />
                 <div>
                   <strong>50+ Physical Stores in UP &amp; NCR</strong>

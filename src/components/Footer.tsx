@@ -4,7 +4,7 @@ import { useShop } from '../context/ShopContext';
 import { ShieldCheck, Phone, Mail, MapPin, Store, Clock, Award } from 'lucide-react';
 
 export default function Footer() {
-  const { setSelectedCategory } = useShop();
+  const { setSelectedCategory, openPolicy, setIsOrdersModalOpen } = useShop();
 
   const handleCategoryNav = (catId) => {
     setSelectedCategory(catId);
@@ -19,7 +19,7 @@ export default function Footer() {
       <div className="container">
         {/* Top Feature highlights */}
         <div className="vp-footer-features-banner">
-          <div className="vp-footer-f-cell">
+          <div className="vp-footer-f-cell" onClick={() => openPolicy('shipping')} style={{ cursor: 'pointer' }}>
             <Store size={26} color="var(--primary)" />
             <div>
               <strong>50+ Stores Across UP</strong>
@@ -27,11 +27,11 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="vp-footer-f-cell">
+          <div className="vp-footer-f-cell" onClick={() => openPolicy('returns')} style={{ cursor: 'pointer' }}>
             <Award size={26} color="var(--accent-emerald)" />
             <div>
               <strong>100% Genuine Brand Warranty</strong>
-              <span>Authorised brand partner with GST invoice</span>
+              <span>7-Day Replacement &amp; GST invoice</span>
             </div>
           </div>
 
@@ -130,14 +130,14 @@ export default function Footer() {
 
           {/* Support Links */}
           <div>
-            <h4 className="footer-col-title">Customer Care</h4>
+            <h4 className="footer-col-title">Customer Care &amp; Policies</h4>
             <ul className="footer-links">
-              <li><a href="#contact" onClick={(e) => e.preventDefault()}>Contact Us &amp; Helpline</a></li>
-              <li><a href="#track" onClick={(e) => e.preventDefault()}>Track My Order</a></li>
-              <li><a href="#shipping" onClick={(e) => e.preventDefault()}>Shipping &amp; Delivery Policy</a></li>
-              <li><a href="#returns" onClick={(e) => e.preventDefault()}>7-Day Replacement &amp; Returns</a></li>
-              <li><a href="#faq" onClick={(e) => e.preventDefault()}>Store Pickup FAQs</a></li>
-              <li><a href="#stores" onClick={(e) => e.preventDefault()}>Find Nearest Value Plus Store</a></li>
+              <li><a href="#shipping" onClick={(e) => { e.preventDefault(); openPolicy('shipping'); }}>Shipping &amp; Delivery Policy</a></li>
+              <li><a href="#returns" onClick={(e) => { e.preventDefault(); openPolicy('returns'); }}>7-Day Return &amp; Replacement</a></li>
+              <li><a href="#refund" onClick={(e) => { e.preventDefault(); openPolicy('refund'); }}>Refund &amp; Cancellation Policy</a></li>
+              <li><a href="#privacy" onClick={(e) => { e.preventDefault(); openPolicy('privacy'); }}>Privacy &amp; Security Policy</a></li>
+              <li><a href="#track" onClick={(e) => { e.preventDefault(); setIsOrdersModalOpen(true); }}>Track My Order</a></li>
+              <li><a href="tel:18001238258">Helpline: 1800-123-VALUE</a></li>
             </ul>
           </div>
 
@@ -145,12 +145,12 @@ export default function Footer() {
           <div>
             <h4 className="footer-col-title">Value Plus India</h4>
             <ul className="footer-links">
-              <li><a href="#about" onClick={(e) => e.preventDefault()}>About Value Plus</a></li>
-              <li><a href="#stores" onClick={(e) => e.preventDefault()}>Our Store Network (UP &amp; NCR)</a></li>
-              <li><a href="#careers" onClick={(e) => e.preventDefault()}>Careers at Value Plus</a></li>
-              <li><a href="#privacy" onClick={(e) => e.preventDefault()}>Privacy Policy</a></li>
-              <li><a href="#terms" onClick={(e) => e.preventDefault()}>Terms &amp; Conditions</a></li>
-              <li><a href="#emi" onClick={(e) => e.preventDefault()}>No Cost EMI Finance Schemes</a></li>
+              <li><a href="#why-us" onClick={(e) => { e.preventDefault(); const el = document.getElementById('why-us-section'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}>About Value Plus Megastore</a></li>
+              <li><a href="#stores" onClick={(e) => { e.preventDefault(); openPolicy('shipping'); }}>Our Store Network (50+ Locations)</a></li>
+              <li><a href="#returns" onClick={(e) => { e.preventDefault(); openPolicy('returns'); }}>Warranty &amp; Replacement Support</a></li>
+              <li><a href="#privacy" onClick={(e) => { e.preventDefault(); openPolicy('privacy'); }}>Privacy Policy</a></li>
+              <li><a href="#refund" onClick={(e) => { e.preventDefault(); openPolicy('refund'); }}>Cancellation Terms</a></li>
+              <li><a href="#shipping" onClick={(e) => { e.preventDefault(); openPolicy('shipping'); }}>Free Shipping Thresholds</a></li>
             </ul>
           </div>
         </div>
@@ -161,11 +161,38 @@ export default function Footer() {
             © 2026 <strong>Value Plus Retail India Pvt. Ltd.</strong> All Rights Reserved. Authorised Consumer Electronics Retailer.
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-            <span>Privacy Policy</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => openPolicy('privacy')}
+              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', font: 'inherit' }}
+            >
+              Privacy Policy
+            </button>
             <span>•</span>
-            <span>Terms of Use</span>
+            <button
+              type="button"
+              onClick={() => openPolicy('shipping')}
+              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', font: 'inherit' }}
+            >
+              Shipping Policy
+            </button>
             <span>•</span>
+            <button
+              type="button"
+              onClick={() => openPolicy('refund')}
+              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', font: 'inherit' }}
+            >
+              Refund &amp; Cancellation
+            </button>
+            <span>•</span>
+            <button
+              type="button"
+              onClick={() => openPolicy('returns')}
+              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', font: 'inherit' }}
+            >
+              Return &amp; Replacement
+            </button>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <ShieldCheck size={14} color="var(--accent-emerald)" /> 100% Encrypted &amp; Secure Checkout
             </span>

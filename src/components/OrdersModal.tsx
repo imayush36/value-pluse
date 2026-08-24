@@ -11,7 +11,7 @@ const TRACKING_STEPS = [
 ];
 
 export default function OrdersModal() {
-  const { orders, isOrdersModalOpen, setIsOrdersModalOpen, formatPrice } = useShop();
+  const { orders, isOrdersModalOpen, setIsOrdersModalOpen, formatPrice, cancelOrder, openPolicy } = useShop();
   const [trackingQuery, setTrackingQuery] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState(orders[0]?.orderId || '');
   const [trackingError, setTrackingError] = useState('');
@@ -132,9 +132,32 @@ export default function OrdersModal() {
                 );
               })}
             </div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Calendar size={14} color="var(--primary)" /> Expected delivery: <strong>{selectedOrder.estimatedDelivery}</strong>
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-default)' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Calendar size={14} color="var(--primary)" /> Expected delivery: <strong>{selectedOrder.estimatedDelivery}</strong>
+              </p>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {selectedOrder.status !== 'Cancelled' && selectedOrder.status !== 'Delivered' && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ color: '#e11d48', borderColor: '#fecdd3', fontSize: '0.75rem' }}
+                    onClick={() => cancelOrder(selectedOrder.orderId)}
+                  >
+                    Cancel Order
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={() => openPolicy('returns')}
+                >
+                  Replacement Policy
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

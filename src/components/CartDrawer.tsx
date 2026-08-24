@@ -23,7 +23,7 @@ export default function CartDrawer() {
     setIsCartOpen,
     updateQuantity,
     removeFromCart,
-    setIsCheckoutOpen,
+    handleProceedToCheckoutFromCart,
     formatPrice,
   } = useShop();
 
@@ -57,8 +57,7 @@ export default function CartDrawer() {
   };
 
   const handleProceedToCheckout = () => {
-    setIsCartOpen(false);
-    setIsCheckoutOpen(true);
+    handleProceedToCheckoutFromCart();
   };
 
   if (!isCartOpen) return null;

@@ -281,12 +281,12 @@ export const PRODUCTS = [
     discount: '44% OFF',
     rating: 4.7,
     reviews: 940,
-    image: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1614633833026-0620459a933a?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1614633833026-0620459a933a?auto=format&fit=crop&w=800&q=80'
     ],
-    description: 'Adjustable 4-stage cooling capacity, 100% copper condenser coil, anti-dust filtration, and turbo cooling for instant room drop in temperature.',
-    features: ['4-in-1 Adjustable Cooling Modes', '100% Pure Copper Condenser & Pipes', 'Instant Turbo Cool Mode', 'Low Gas Diagnosis Indicator'],
+    description: 'Adjustable 4-stage cooling capacity with Voltas Superdry dehumidification, 100% pure copper condenser coil, anti-dust filtration, and instant turbo room chill mode.',
+    features: ['4-in-1 Adjustable Cooling Modes', '100% Pure Copper Condenser & Pipes', 'Instant Turbo Cool Mode with High Ambient Cooling', 'Low Gas Diagnosis Indicator & Eco Friendly R32'],
     emi: '₹1,457/mo (No Cost EMI)',
     stock: 30,
     badge: 'Best Value',
@@ -349,9 +349,9 @@ export const PRODUCTS = [
     discount: '28% OFF',
     rating: 4.7,
     reviews: 410,
-    image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1536353284924-9240cebc5040?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1536353284924-9240cebc5040?auto=format&fit=crop&w=800&q=80'
     ],
     description: 'IntelliSense Inverter Technology with 9 hours of cooling retention during power cuts, Crescent Door design, and Microblock technology.',
     features: ['5-Star Energy Rating', 'Up to 9 Hours Cooling Retention', 'Base Stand with Deep Vegetable Drawer', 'Microblock Anti-Bacterial Technology'],
@@ -395,9 +395,9 @@ export const PRODUCTS = [
     discount: '33% OFF',
     rating: 4.8,
     reviews: 890,
-    image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?auto=format&fit=crop&w=800&q=80'
     ],
     description: 'Ecobubble technology penetrates fabric 2.5x faster, Dual Storm pulsator, Soft Closing door, Magic Filter, and Digital Inverter Motor with 20-yr warranty.',
     features: ['Ecobubble & BubbleStorm Wash', 'Digital Inverter with 20-Yr Motor Warranty', 'Soft Close Tempered Glass Lid', 'Magic Dual Lint Filter'],
@@ -417,9 +417,9 @@ export const PRODUCTS = [
     discount: '29% OFF',
     rating: 4.8,
     reviews: 320,
-    image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=800&q=80'
     ],
     description: '9 Swirl Wash, Aqua Energie water softener device, 3D Warm Wash system with hot water hygiene cycle, 4 years comprehensive warranty.',
     features: ['3D Warm Wash with Hot Steam Cycle', 'Aqua Energie Built-in Water Softener', 'Crescent Moon Drum Structure', '4 Years Machine + 10 Years Motor Warranty'],
@@ -601,9 +601,9 @@ export const PRODUCTS = [
     discount: '32% OFF',
     rating: 4.7,
     reviews: 510,
-    image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=800&q=80'
     ],
     description: '25 Litre capacity ideal for baking, grilling, reheating, and defrosting. Stainless steel cavity, motorized rotisserie, and 200+ Indian auto-cook recipes.',
     features: ['Baking, Grilling & Convection Microwave', 'Stainless Steel Cavity for Uniform Heat', '200+ Auto Cook Programmed Recipes', 'Child Safety Lock & Sensory Defrost'],
