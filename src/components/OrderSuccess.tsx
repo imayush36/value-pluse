@@ -116,16 +116,70 @@ export default function OrderSuccess() {
             Thank you for shopping with <strong>Value Plus India</strong>.
           </p>
 
-          <div>
-            <div className="order-badge-id">Order ID: {lastPlacedOrder.orderId}</div>
+          {/* Prominent Ordered Item Name Banner */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#eff6ff',
+                border: '1.5px solid #bfdbfe',
+                borderRadius: '12px',
+                padding: '0.65rem 1.15rem',
+                color: '#1e40af',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                maxWidth: '100%',
+                boxShadow: '0 2px 8px rgba(10, 108, 220, 0.08)',
+              }}
+            >
+              <Package size={18} color="#0a6cdc" />
+              <span style={{ whiteSpace: 'normal', textAlign: 'left' }}>
+                <strong>Item:</strong> {lastPlacedOrder.productName || lastPlacedOrder.primaryProductName || lastPlacedOrder.items?.[0]?.name || 'Electronic Appliance'}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+              Order ID: <strong style={{ color: 'var(--text-main)' }}>{lastPlacedOrder.orderId}</strong>
+            </div>
           </div>
 
-          <p style={{ fontSize: '0.9375rem', color: 'var(--accent-emerald)', fontWeight: '700', marginBottom: '1.5rem' }}>
+          <p style={{ fontSize: '0.9375rem', color: 'var(--accent-emerald)', fontWeight: '700', marginBottom: '1.25rem' }}>
             ● Your order has been dispatched from your nearest Value Plus retail warehouse.
           </p>
 
           {/* Quick Summary Card */}
           <div style={{ background: 'var(--bg-alt)', border: '1px solid var(--border-default)', borderRadius: '12px', padding: '1.25rem', textAlign: 'left', marginBottom: '1.75rem' }}>
+            {/* Item(s) Preview List */}
+            {lastPlacedOrder.items && lastPlacedOrder.items.length > 0 && (
+              <div style={{ marginBottom: '0.85rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-default)' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  Ordered Products ({lastPlacedOrder.items.length}):
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {lastPlacedOrder.items.map((it, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      {it.image && (
+                        <img
+                          src={it.image}
+                          alt={it.name}
+                          style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-default)' }}
+                        />
+                      )}
+                      <div style={{ flexGrow: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {it.name || it.productName}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Qty: {it.quantity} × {formatPrice(it.price)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Estimated Delivery:</span>
               <strong style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -136,12 +190,19 @@ export default function OrderSuccess() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Customer:</span>
-              <strong style={{ color: 'var(--text-main)' }}>{lastPlacedOrder.customer.fullName} ({lastPlacedOrder.customer.city})</strong>
+              <strong style={{ color: 'var(--text-main)' }}>{lastPlacedOrder.customer?.fullName} ({lastPlacedOrder.customer?.city})</strong>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', borderTop: '1px solid var(--border-default)', paddingTop: '0.5rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Total Amount (Demo):</span>
-              <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>{formatPrice(lastPlacedOrder.total)}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Payment:</span>
+              <strong style={{ color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Check size={14} /> {lastPlacedOrder.paymentMethod || 'UPI'} ({lastPlacedOrder.paymentStatus || 'Paid'})
+              </strong>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9375rem', borderTop: '1px solid var(--border-default)', paddingTop: '0.65rem' }}>
+              <span style={{ color: 'var(--text-main)', fontWeight: '700' }}>Total Paid Amount:</span>
+              <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{formatPrice(lastPlacedOrder.total)}</strong>
             </div>
           </div>
 
