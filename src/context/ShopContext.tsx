@@ -471,7 +471,7 @@ export const ShopProvider = ({ children }) => {
   };
 
   // Order Placement
-  const placeOrder = async (customerDetails, items, totals) => {
+  const placeOrder = async (customerDetails, items, totals, paymentMeta = {}) => {
     const orderId = 'VP-' + Math.floor(100000 + Math.random() * 900000);
 
     const enrichedItems = (items || []).map((item) => ({
@@ -502,6 +502,10 @@ export const ShopProvider = ({ children }) => {
       discount: totals.discount || 0,
       total: totals.total,
       status: 'Confirmed',
+      paymentMethod: paymentMeta.paymentMethod || customerDetails.paymentMethod || 'UPI',
+      paymentStatus: paymentMeta.paymentStatus || (customerDetails.paymentMethod === 'cod' ? 'Pending (COD)' : 'Paid'),
+      transactionId: paymentMeta.transactionId || null,
+      paidAt: paymentMeta.paidAt || (customerDetails.paymentMethod === 'cod' ? null : new Date().toISOString()),
       estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
         weekday: 'short',
         month: 'short',
