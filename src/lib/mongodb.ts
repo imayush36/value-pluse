@@ -21,14 +21,16 @@ export function getMongoClient(): Promise<MongoClient> {
       maxPoolSize: 10,
       minPoolSize: 0,
       maxIdleTimeMS: 30000,
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
       tls: true,
+      tlsAllowInvalidCertificates: true,
       family: 4,
     });
 
     globalForMongo.mongoClientPromise = client.connect().catch((err) => {
       globalForMongo.mongoClientPromise = undefined;
+      console.error('MongoDB Atlas TLS/Connection error (check IP Whitelist 0.0.0.0/0 in MongoDB Atlas):', err?.message || err);
       throw err;
     });
   }
