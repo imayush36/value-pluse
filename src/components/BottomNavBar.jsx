@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
+import { useAuth } from '../context/AuthContext';
 import { VALUE_PLUS_CATEGORIES } from '../data/products';
 import {
   Home,
@@ -36,6 +38,8 @@ const iconMap = {
 };
 
 export default function BottomNavBar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     cartCount,
     wishlist,
@@ -45,14 +49,15 @@ export default function BottomNavBar() {
     setSelectedCategory,
     setSelectedProduct,
     setSearchQuery,
-    selectedProduct,
   } = useShop();
+  const { currentUser, openAuthModal } = useAuth();
 
   const [showCategorySheet, setShowCategorySheet] = useState(false);
 
   const handleHome = () => {
     setSelectedProduct(null);
     setSearchQuery('');
+    navigate('/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setShowCategorySheet(false);
   };
@@ -62,17 +67,23 @@ export default function BottomNavBar() {
     setSelectedCategory(catId);
     setSearchQuery('');
     setShowCategorySheet(false);
-    // Small delay then scroll to shop section
-    setTimeout(() => {
-      const el = document.getElementById('shop-section');
-      if (el) {
-        const y = el.getBoundingClientRect().top + window.pageYOffset - 80;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 100);
+    if (catId === 'all') {
+      navigate('/shop');
+    } else {
+      navigate(`/category/${catId.toLowerCase()}`);
+    }
   };
 
-  const isHomePage = !selectedProduct;
+  const handleOrdersClick = () => {
+    setShowCategorySheet(false);
+    if (currentUser) {
+      navigate('/orders');
+    } else {
+      setIsOrdersModalOpen(true);
+    }
+  };
+
+  const isHomeActive = location.pathname === '/';
 
   return (
     <>
@@ -81,7 +92,7 @@ export default function BottomNavBar() {
         {/* Home */}
         <button
           type="button"
-          className={`bottom-nav-btn ${isHomePage ? 'active' : ''}`}
+          className={`bottom-nav-btn ${isHomeActive ? 'active' : ''}`}
           onClick={handleHome}
           aria-label="Home"
         >
@@ -94,7 +105,7 @@ export default function BottomNavBar() {
         {/* Categories */}
         <button
           type="button"
-          className={`bottom-nav-btn ${showCategorySheet ? 'active' : ''}`}
+          className={`bottom-nav-btn ${showCategorySheet || location.pathname.includes('/category') ? 'active' : ''}`}
           onClick={() => setShowCategorySheet((v) => !v)}
           aria-label="Categories"
         >
@@ -108,30 +119,34 @@ export default function BottomNavBar() {
         <button
           type="button"
           className="bottom-nav-btn bottom-nav-cart-cta"
-          onClick={() => { setIsCartOpen(true); setShowCategorySheet(false); }}
+          onClick={() => {
+            setIsCartOpen(true);
+            setShowCategorySheet(false);
+          }}
           aria-label="Cart"
         >
           <span className="bottom-nav-cart-icon-wrap">
             <ShoppingBag size={24} />
-            {cartCount > 0 && (
-              <span className="bottom-cart-badge">{cartCount}</span>
-            )}
+            {cartCount > 0 && <span className="bottom-cart-badge">{cartCount}</span>}
           </span>
-          <span className="bottom-nav-label" style={{ color: '#ffffff' }}>Cart</span>
+          <span className="bottom-nav-label" style={{ color: '#ffffff' }}>
+            Cart
+          </span>
         </button>
 
         {/* Wishlist */}
         <button
           type="button"
           className="bottom-nav-btn"
-          onClick={() => { setIsWishlistOpen(true); setShowCategorySheet(false); }}
+          onClick={() => {
+            setIsWishlistOpen(true);
+            setShowCategorySheet(false);
+          }}
           aria-label="Wishlist"
         >
           <span className="bottom-nav-icon" style={{ position: 'relative' }}>
             <Heart size={22} />
-            {wishlist.length > 0 && (
-              <span className="bottom-nav-mini-badge">{wishlist.length}</span>
-            )}
+            {wishlist.length > 0 && <span className="bottom-nav-mini-badge">{wishlist.length}</span>}
           </span>
           <span className="bottom-nav-label">Wishlist</span>
         </button>
@@ -139,8 +154,8 @@ export default function BottomNavBar() {
         {/* Orders */}
         <button
           type="button"
-          className="bottom-nav-btn"
-          onClick={() => { setIsOrdersModalOpen(true); setShowCategorySheet(false); }}
+          className={`bottom-nav-btn ${location.pathname === '/orders' ? 'active' : ''}`}
+          onClick={handleOrdersClick}
           aria-label="My Orders"
         >
           <span className="bottom-nav-icon">
@@ -150,16 +165,11 @@ export default function BottomNavBar() {
         </button>
       </nav>
 
-      {/* Category Bottom Sheet (slides up from bottom) */}
+      {/* Category Bottom Sheet */}
       {showCategorySheet && (
         <>
-          {/* Backdrop */}
-          <div
-            className="bottom-sheet-backdrop"
-            onClick={() => setShowCategorySheet(false)}
-          />
+          <div className="bottom-sheet-backdrop" onClick={() => setShowCategorySheet(false)} />
 
-          {/* Sheet Panel */}
           <div className="bottom-category-sheet">
             <div className="sheet-drag-handle" />
 
@@ -187,7 +197,7 @@ export default function BottomNavBar() {
                 </span>
                 <div className="sheet-cat-info">
                   <span className="sheet-cat-name">All Products</span>
-                  <span className="sheet-cat-sub">Browse full catalog</span>
+                  <span className="sheet-cat-sub">Browse full store catalog</span>
                 </div>
                 <ChevronRight size={16} color="var(--text-light)" />
               </button>
@@ -206,7 +216,9 @@ export default function BottomNavBar() {
                     </span>
                     <div className="sheet-cat-info">
                       <span className="sheet-cat-name">{cat.name}</span>
-                      <span className="sheet-cat-sub">{cat.count} products · {cat.tag}</span>
+                      <span className="sheet-cat-sub">
+                        {cat.count} products · {cat.tag}
+                      </span>
                     </div>
                     <ChevronRight size={16} color="var(--text-light)" />
                   </button>
@@ -223,7 +235,9 @@ export default function BottomNavBar() {
                   <Flame size={20} />
                 </span>
                 <div className="sheet-cat-info">
-                  <span className="sheet-cat-name" style={{ color: '#e10600' }}>🔥 Mega Deals</span>
+                  <span className="sheet-cat-name" style={{ color: '#e10600' }}>
+                    🔥 Mega Deals
+                  </span>
                   <span className="sheet-cat-sub">Exclusive limited-time discounts</span>
                 </div>
                 <ChevronRight size={16} color="#e10600" />

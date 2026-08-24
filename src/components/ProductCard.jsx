@@ -1,9 +1,11 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
-import { Heart, Star, ShoppingBag, Eye, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Eye, Zap } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function ProductCard({ product }) {
+  const navigate = useNavigate();
   const {
     addToCart,
     handleBuyNow,
@@ -16,7 +18,8 @@ export default function ProductCard({ product }) {
   const cardRef = useRef(null);
   const heartRef = useRef(null);
 
-  const isFavorite = isWishlisted(product.id);
+  const prodId = product._id || product.id;
+  const isFavorite = isWishlisted(prodId);
 
   const handleHeartClick = (e) => {
     e.stopPropagation();
@@ -42,21 +45,32 @@ export default function ProductCard({ product }) {
     addToCart(product, 1);
   };
 
-  const handleBuy = (e) => {
-    e.stopPropagation();
-    handleBuyNow(product, 1);
+  const openDetails = (e) => {
+    if (e) e.stopPropagation();
+    setSelectedProduct(product);
+    const targetSlug =
+      product.slug ||
+      prodId ||
+      product.name.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, '-');
+    navigate(`/product/${targetSlug}`);
   };
 
-  const openDetails = () => {
-    setSelectedProduct(product);
-  };
+  const currentPrice = product.discountPrice || product.price;
+  const originalPrice = product.price > currentPrice ? product.price : product.originalPrice;
+  const discountText =
+    product.discount ||
+    (originalPrice && originalPrice > currentPrice
+      ? `${Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% OFF`
+      : null);
+
+  const imgSrc = product.thumbnail || product.images?.[0] || product.image;
 
   return (
-    <div ref={cardRef} className="vp-product-card">
+    <div ref={cardRef} className="vp-product-card" onClick={openDetails}>
       {/* Top Image Section */}
-      <div className="vp-card-top" onClick={openDetails}>
+      <div className="vp-card-top">
         <img
-          src={product.image}
+          src={imgSrc}
           alt={product.name}
           loading="lazy"
           className="vp-card-img"
@@ -64,8 +78,8 @@ export default function ProductCard({ product }) {
 
         {/* Badges */}
         <div className="vp-card-badges">
-          {product.discount && (
-            <span className="badge-tag badge-discount">{product.discount}</span>
+          {discountText && (
+            <span className="badge-tag badge-discount">{discountText}</span>
           )}
           {product.badge && (
             <span className="badge-tag badge-featured">{product.badge}</span>
@@ -75,6 +89,7 @@ export default function ProductCard({ product }) {
         {/* Wishlist Button */}
         <button
           ref={heartRef}
+          type="button"
           className={`vp-wishlist-btn ${isFavorite ? 'active' : ''}`}
           onClick={handleHeartClick}
           aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -88,7 +103,7 @@ export default function ProductCard({ product }) {
 
         {/* Quick View Button Hover Pill */}
         <div className="vp-quick-view-overlay">
-          <button className="vp-quick-view-btn" onClick={openDetails}>
+          <button type="button" className="vp-quick-view-btn" onClick={openDetails}>
             <Eye size={14} />
             Quick View
           </button>
@@ -115,21 +130,21 @@ export default function ProductCard({ product }) {
               <Star
                 key={i}
                 size={13}
-                fill={i < Math.floor(product.rating) ? '#f59e0b' : 'none'}
+                fill={i < Math.floor(product.rating || 4.5) ? '#f59e0b' : 'none'}
                 color="#f59e0b"
               />
             ))}
           </div>
-          <span className="rating-score">{product.rating}</span>
-          <span className="rating-count">({product.reviews} reviews)</span>
+          <span className="rating-score">{product.rating || 4.8}</span>
+          <span className="rating-count">({product.reviewCount || product.reviews || 120} reviews)</span>
         </div>
 
         {/* Pricing & MRP */}
         <div className="vp-card-price-block">
           <div className="vp-price-main-row">
-            <span className="vp-current-price">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
-              <span className="vp-original-mrp">{formatPrice(product.originalPrice)}</span>
+            <span className="vp-current-price">{formatPrice(currentPrice)}</span>
+            {originalPrice && originalPrice > currentPrice && (
+              <span className="vp-original-mrp">{formatPrice(originalPrice)}</span>
             )}
           </div>
           {product.emi && (
@@ -143,6 +158,7 @@ export default function ProductCard({ product }) {
         {/* Action Buttons */}
         <div className="vp-card-actions-row">
           <button
+            type="button"
             className="btn btn-vp-view"
             onClick={openDetails}
             title="View full specifications"
@@ -152,6 +168,7 @@ export default function ProductCard({ product }) {
           </button>
 
           <button
+            type="button"
             className="btn btn-vp-cart"
             onClick={handleAddToCart}
             title="Add product to shopping cart"

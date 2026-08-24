@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
+import { useAuth } from '../context/AuthContext';
 import {
   X,
   Trash2,
@@ -14,6 +15,7 @@ import {
 import gsap from 'gsap';
 
 export default function CartDrawer() {
+  const { isAuthenticated, openAuthModal } = useAuth();
   const {
     cart,
     cartCount,
@@ -24,6 +26,7 @@ export default function CartDrawer() {
     removeFromCart,
     setIsCheckoutOpen,
     formatPrice,
+    showToast,
   } = useShop();
 
   const drawerRef = useRef(null);
@@ -56,6 +59,12 @@ export default function CartDrawer() {
   };
 
   const handleProceedToCheckout = () => {
+    if (!isAuthenticated) {
+      setIsCartOpen(false);
+      showToast('Please register or log in with OTP before proceeding to checkout', 'info');
+      openAuthModal('register');
+      return;
+    }
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   };

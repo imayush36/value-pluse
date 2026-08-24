@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
-import { VALUE_PLUS_CATEGORIES, PRODUCTS } from '../data/products';
+import { useAuth } from '../context/AuthContext';
 import {
   ShoppingBag,
   Heart,
@@ -12,11 +13,19 @@ import {
   Store,
   ChevronDown,
   ArrowRight,
+  User,
+  LogOut,
+  Sparkles,
+  Shield,
+  LayoutDashboard,
 } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const {
+    products,
+    categories,
     cartCount,
     cartSubtotal,
     wishlist,
@@ -30,16 +39,36 @@ export default function Navbar() {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    selectedProduct,
     setSelectedProduct,
     formatPrice,
   } = useShop();
 
+  const {
+    currentUser,
+    isAdmin,
+    openAuthModal,
+    openAccountModal,
+    logout,
+  } = useAuth();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchCategoryFilter, setSearchCategoryFilter] = useState('all');
   const navRef = useRef(null);
   const cartIconRef = useRef(null);
+  const userDropdownRef = useRef(null);
+
+  // Close user dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   useEffect(() => {
     if (navRef.current) {
@@ -67,44 +96,50 @@ export default function Navbar() {
     }
   }, [cartCount]);
 
-  const scrollToSection = (id) => {
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
     setShowSearchDropdown(false);
-    setSelectedProduct(null);
-    const element = document.getElementById(id);
-    if (element) {
-      const y = element.getBoundingClientRect().top + window.pageYOffset - 120;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    const slug =
+      product.slug ||
+      product._id ||
+      product.id ||
+      product.name.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, '-');
+    navigate(`/product/${slug}`);
   };
 
-  const handleSelectCategory = (catId) => {
-    setSelectedProduct(null);
-    setSelectedCategory(catId);
-    setSearchQuery('');
-    const element = document.getElementById('shop-section');
-    if (element) {
-      const y = element.getBoundingClientRect().top + window.pageYOffset - 120;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setShowSearchDropdown(false);
+    navigate(`/shop?q=${encodeURIComponent(searchQuery)}`);
   };
 
   const searchResults = searchQuery.trim()
-    ? PRODUCTS.filter((p) => {
+    ? products.filter((p) => {
         const q = searchQuery.toLowerCase();
-        const matchCat = searchCategoryFilter === 'all' || p.category === searchCategoryFilter;
+        const matchCat =
+          searchCategoryFilter === 'all' ||
+          p.category?.toLowerCase() === searchCategoryFilter.toLowerCase();
         const matchText =
-          p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q);
+          p.name?.toLowerCase().includes(q) ||
+          p.brand?.toLowerCase().includes(q) ||
+          p.category?.toLowerCase().includes(q) ||
+          p.sku?.toLowerCase().includes(q);
         return matchCat && matchText;
       }).slice(0, 5)
     : [];
 
+  const userFirstName = currentUser ? currentUser.fullName.split(' ')[0] : '';
+  const userInitials = currentUser
+    ? currentUser.fullName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : '';
+
   return (
     <header ref={navRef} className={`navbar-wrapper ${isScrolled ? 'navbar-scrolled' : ''}`}>
-
       {/* ── TOP UTILITY BAR (desktop only) ── */}
       <div className="top-utility-bar">
         <div className="container top-utility-inner">
@@ -124,10 +159,10 @@ export default function Navbar() {
               <Phone size={13} color="var(--primary)" />
               <span>1800-123-VALUE</span>
             </a>
-            <button type="button" className="top-link-btn" onClick={() => scrollToSection('why-us-section')}>
+            <Link to="/about" className="top-link-btn">
               <Store size={13} color="var(--primary)" />
               <span>50+ Stores</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -136,23 +171,18 @@ export default function Navbar() {
       <div className="main-header-bar">
         <div className="container">
           <div className="main-header-inner">
-
             {/* Logo */}
-            <a
-              href="#home"
-              className="nav-brand-vp"
-              onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}
-            >
+            <Link to="/" className="nav-brand-vp">
               <div className="brand-logo-badge">
                 <span className="brand-text-value">VALUE</span>
                 <span className="brand-text-plus">PLUS</span>
               </div>
               <span className="brand-subtext">ELECTRONICS MEGASTORE</span>
-            </a>
+            </Link>
 
             {/* Search Bar (desktop) */}
             <div className="header-search-container">
-              <div className="header-search-box">
+              <form onSubmit={handleSearchSubmit} className="header-search-box">
                 <select
                   value={searchCategoryFilter}
                   onChange={(e) => setSearchCategoryFilter(e.target.value)}
@@ -168,23 +198,36 @@ export default function Navbar() {
                   <option value="Laptops">Laptops</option>
                   <option value="Audio">Audio</option>
                   <option value="Kitchen">Kitchen</option>
+                  <option value="Wearables">Wearables</option>
                 </select>
 
                 <input
                   type="text"
                   placeholder="Search TVs, iPhones, ACs, Laptops..."
                   value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setShowSearchDropdown(true); }}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSearchDropdown(true);
+                  }}
                   onFocus={() => setShowSearchDropdown(true)}
                   className="search-main-input"
                 />
                 {searchQuery && (
-                  <button className="search-clear-btn" onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }}>✕</button>
+                  <button
+                    type="button"
+                    className="search-clear-btn"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearchDropdown(false);
+                    }}
+                  >
+                    ✕
+                  </button>
                 )}
-                <button className="search-submit-btn" onClick={() => scrollToSection('shop-section')} aria-label="Search">
+                <button type="submit" className="search-submit-btn" aria-label="Search">
                   <Search size={18} />
                 </button>
-              </div>
+              </form>
 
               {showSearchDropdown && searchResults.length > 0 && (
                 <div className="search-predictive-dropdown">
@@ -194,31 +237,187 @@ export default function Navbar() {
                   </div>
                   {searchResults.map((item) => (
                     <div
-                      key={item.id}
+                      key={item._id || item.id}
                       className="search-predictive-item"
-                      onClick={() => { setSelectedProduct(item); setShowSearchDropdown(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      onClick={() => handleSelectProduct(item)}
                     >
-                      <img src={item.image} alt={item.name} />
+                      <img src={item.thumbnail || item.images?.[0] || item.image} alt={item.name} />
                       <div className="search-item-info">
                         <div className="search-item-name">{item.name}</div>
                         <div className="search-item-price-row">
-                          <span className="search-item-price">{formatPrice(item.price)}</span>
+                          <span className="search-item-price">{formatPrice(item.discountPrice || item.price)}</span>
                           {item.discount && <span className="search-item-discount">{item.discount}</span>}
                         </div>
                       </div>
                       <ArrowRight size={14} color="var(--primary)" />
                     </div>
                   ))}
-                  <div className="search-view-all" onClick={() => { setShowSearchDropdown(false); scrollToSection('shop-section'); }}>
+                  <div
+                    className="search-view-all"
+                    onClick={() => {
+                      setShowSearchDropdown(false);
+                      navigate(`/shop?q=${encodeURIComponent(searchQuery)}`);
+                    }}
+                  >
                     View all results for "{searchQuery}" →
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Desktop Actions (hidden on mobile — bottom bar handles those) */}
+            {/* Desktop Actions */}
             <div className="header-actions-group">
-              <button className="header-action-item" onClick={() => setIsOrdersModalOpen(true)} title="My Orders">
+              {/* Account Dropdown / Sign In Button */}
+              {currentUser ? (
+                <div className="header-user-dropdown-wrap" ref={userDropdownRef}>
+                  <button
+                    type="button"
+                    className="header-action-item user-logged-pill"
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    title="Account Settings"
+                  >
+                    <div className="nav-user-avatar">{userInitials}</div>
+                    <div className="action-text-block">
+                      <span className="action-sub">Hi, {userFirstName}</span>
+                      <span className="action-main" style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        Account <ChevronDown size={12} />
+                      </span>
+                    </div>
+                  </button>
+
+                  {showUserDropdown && (
+                    <div className="nav-user-dropdown-menu">
+                      <div className="nav-dropdown-user-header">
+                        <div className="dropdown-avatar">{userInitials}</div>
+                        <div className="dropdown-user-meta">
+                          <strong>{currentUser.fullName}</strong>
+                          <span>{currentUser.phone ? `+91 ${currentUser.phone}` : currentUser.email}</span>
+                          <div className="dropdown-member-badge">
+                            <Sparkles size={11} />
+                            <span>{isAdmin ? 'Admin Account' : 'Verified Member'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="nav-dropdown-links">
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            className="nav-dropdown-item font-bold text-primary bg-blue-50"
+                            onClick={() => {
+                              setShowUserDropdown(false);
+                              navigate('/admin/dashboard');
+                            }}
+                          >
+                            <LayoutDashboard size={16} />
+                            <span>Admin Control Panel</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="nav-dropdown-item"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            openAccountModal('profile');
+                          }}
+                        >
+                          <User size={16} />
+                          <span>My Profile</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="nav-dropdown-item"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            navigate('/orders');
+                          }}
+                        >
+                          <Package size={16} />
+                          <span>My Orders</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="nav-dropdown-item"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            openAccountModal('addresses');
+                          }}
+                        >
+                          <MapPin size={16} />
+                          <span>Saved Addresses</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="nav-dropdown-item"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            setIsWishlistOpen(true);
+                          }}
+                        >
+                          <Heart size={16} />
+                          <span>Saved Wishlist ({wishlist.length})</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="nav-dropdown-item"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            openAccountModal('security');
+                          }}
+                        >
+                          <Shield size={16} />
+                          <span>Security &amp; Password</span>
+                        </button>
+
+                        <div className="nav-dropdown-divider" />
+
+                        <button
+                          type="button"
+                          className="nav-dropdown-item text-danger"
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            logout();
+                          }}
+                        >
+                          <LogOut size={16} />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="header-action-item header-signin-btn"
+                  onClick={() => openAuthModal('login')}
+                  title="Sign In or Register"
+                >
+                  <User size={20} />
+                  <div className="action-text-block">
+                    <span className="action-sub">Welcome</span>
+                    <span className="action-main">Sign In</span>
+                  </div>
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="header-action-item"
+                onClick={() => {
+                  if (currentUser) {
+                    navigate('/orders');
+                  } else {
+                    setIsOrdersModalOpen(true);
+                  }
+                }}
+                title="My Orders"
+              >
                 <Package size={20} />
                 <div className="action-text-block">
                   <span className="action-sub">Track</span>
@@ -226,7 +425,12 @@ export default function Navbar() {
                 </div>
               </button>
 
-              <button className="header-action-item" onClick={() => setIsWishlistOpen(true)} title="Wishlist">
+              <button
+                type="button"
+                className="header-action-item"
+                onClick={() => setIsWishlistOpen(true)}
+                title="Wishlist"
+              >
                 <div className="icon-with-badge">
                   <Heart size={20} />
                   {wishlist.length > 0 && <span className="action-counter-badge">{wishlist.length}</span>}
@@ -239,6 +443,7 @@ export default function Navbar() {
 
               <button
                 ref={cartIconRef}
+                type="button"
                 className="header-action-item cart-action-pill"
                 onClick={() => setIsCartOpen(true)}
                 title="Cart"
@@ -255,78 +460,67 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Mobile Search Bar (visible only on mobile, below logo row) */}
+          {/* Mobile Search Bar */}
           <div className="mobile-search-row">
-            <div className="header-search-box mobile-search-box">
+            <form onSubmit={handleSearchSubmit} className="header-search-box mobile-search-box">
               <input
                 type="text"
                 placeholder="Search products, brands..."
                 value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setShowSearchDropdown(true); }}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearchDropdown(true);
+                }}
                 onFocus={() => setShowSearchDropdown(true)}
                 className="search-main-input"
               />
               {searchQuery && (
-                <button className="search-clear-btn" onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }}>✕</button>
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setShowSearchDropdown(false);
+                  }}
+                >
+                  ✕
+                </button>
               )}
-              <button className="search-submit-btn" onClick={() => scrollToSection('shop-section')} aria-label="Search">
+              <button type="submit" className="search-submit-btn" aria-label="Search">
                 <Search size={18} />
               </button>
-            </div>
-            {showSearchDropdown && searchResults.length > 0 && (
-              <div className="search-predictive-dropdown">
-                {searchResults.map((item) => (
-                  <div
-                    key={item.id}
-                    className="search-predictive-item"
-                    onClick={() => { setSelectedProduct(item); setShowSearchDropdown(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  >
-                    <img src={item.image} alt={item.name} />
-                    <div className="search-item-info">
-                      <div className="search-item-name">{item.name}</div>
-                      <div className="search-item-price-row">
-                        <span className="search-item-price">{formatPrice(item.price)}</span>
-                        {item.discount && <span className="search-item-discount">{item.discount}</span>}
-                      </div>
-                    </div>
-                    <ArrowRight size={14} color="var(--primary)" />
-                  </div>
-                ))}
-              </div>
-            )}
+            </form>
           </div>
         </div>
       </div>
 
-      {/* ── CATEGORY NAV BAR (desktop only) ── */}
+      {/* ── CATEGORY NAV BAR ── */}
       <div className="category-nav-bar">
         <div className="container">
           <div className="category-nav-inner">
-            <button
-              className={`cat-nav-item cat-nav-all ${selectedCategory === 'all' && !selectedProduct ? 'active' : ''}`}
-              onClick={() => handleSelectCategory('all')}
-            >
-              <Menu size={16} /><span>All Categories</span>
-            </button>
+            <Link to="/shop" className="cat-nav-item cat-nav-all">
+              <Menu size={16} />
+              <span>All Products &amp; Categories</span>
+            </Link>
             <div className="cat-nav-scroll-list">
               {[
-                ['Mobiles', 'Mobiles & Tablets'],
-                ['Televisions', 'Televisions'],
-                ['Air Conditioners', 'Air Conditioners'],
-                ['Refrigerators', 'Refrigerators'],
-                ['Washing Machines', 'Washing Machines'],
-                ['Laptops', 'Laptops'],
-                ['Audio', 'Audio & Soundbars'],
-                ['Kitchen', 'Kitchen'],
-                ['Wearables', 'Wearables'],
-              ].map(([id, label]) => (
-                <button
-                  key={id}
-                  className={`cat-nav-item ${selectedCategory === id ? 'active' : ''}`}
-                  onClick={() => handleSelectCategory(id)}
+                ['mobiles', 'Mobiles & Tablets'],
+                ['televisions', 'Televisions'],
+                ['air-conditioners', 'Air Conditioners'],
+                ['refrigerators', 'Refrigerators'],
+                ['washing-machines', 'Washing Machines'],
+                ['laptops', 'Laptops'],
+                ['audio', 'Audio & Soundbars'],
+                ['kitchen', 'Kitchen Appliances'],
+                ['wearables', 'Smartwatches & Fitness'],
+              ].map(([slug, label]) => (
+                <Link
+                  key={slug}
+                  to={`/category/${slug}`}
+                  className="cat-nav-item"
                 >
                   {label}
-                </button>
+                </Link>
               ))}
             </div>
           </div>

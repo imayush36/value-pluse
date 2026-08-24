@@ -272,7 +272,7 @@ export const PRODUCTS = [
   },
   {
     id: 'prod-ac-3',
-    name: 'Voltas 1.5 Ton 3 Star Adjustable Inverter Split AC',
+    name: 'Voltas 1.5 Ton 3 Star Adjustable Inverter Split AC (183V Vectra Prism)',
     brand: 'Voltas',
     category: 'Air Conditioners',
     price: 34990,
@@ -280,11 +280,11 @@ export const PRODUCTS = [
     discount: '44% OFF',
     rating: 4.7,
     reviews: 940,
-    image: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1590756254933-2873d72a83b6?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1590756254933-2873d72a83b6?auto=format&fit=crop&w=800&q=80'
     ],
-    description: 'Adjustable 4-stage cooling capacity, 100% copper condenser coil, anti-dust filtration, and turbo cooling for instant room drop in temperature.',
+    description: 'Adjustable 4-stage cooling capacity, 100% pure grooved copper condenser coil, anti-dust filtration with antimicrobial protection, and turbo cooling for instant drop in room temperature.',
     features: ['4-in-1 Adjustable Cooling Modes', '100% Pure Copper Condenser & Pipes', 'Instant Turbo Cool Mode', 'Low Gas Diagnosis Indicator'],
     emi: '₹1,457/mo (No Cost EMI)',
     stock: 30,
@@ -308,7 +308,7 @@ export const PRODUCTS = [
     gallery: [
       'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80'
     ],
-    description: 'Massive 655-litre capacity with Multi Air Flow cooling, Smart Inverter Compressor, Express Freeze, and Smart Diagnosis for quiet performance.',
+    description: 'Massive 655-litre capacity with Multi Air Flow cooling, Smart Inverter Compressor, Express Freeze, and Smart Diagnosis for whisper-quiet performance.',
     features: ['655 Litres Side-by-Side Capacity', 'Smart Inverter Compressor with 10-Yr Warranty', 'Multi-Air Flow Cooling Vents', 'Toughened Glass Adjustable Shelves'],
     emi: '₹3,124/mo (No Cost EMI)',
     stock: 9,
@@ -318,7 +318,7 @@ export const PRODUCTS = [
   },
   {
     id: 'prod-ref-2',
-    name: 'Samsung 256L 3 Star Convertible Double Door Refrigerator',
+    name: 'Samsung 256L 3 Star Convertible Double Door Refrigerator (Elegant Inox)',
     brand: 'Samsung',
     category: 'Refrigerators',
     price: 26990,
@@ -330,7 +330,7 @@ export const PRODUCTS = [
     gallery: [
       'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=800&q=80'
     ],
-    description: 'Convertible 5-in-1 modes, Digital Inverter Technology with 20-year compressor warranty, All-Around Cooling, and deodorizing filter.',
+    description: 'Convertible 5-in-1 modes, Digital Inverter Technology with 20-year compressor warranty, All-Around Cooling, and deodorizing filter for odor-free freshness.',
     features: ['Convertible 5-in-1 Mode Storage', '20-Year Warranty on Digital Inverter Compressor', 'Twin Cooling Plus with Separate Airflow', 'Stabilizer Free Operation (100V-300V)'],
     emi: '₹1,124/mo (No Cost EMI)',
     stock: 28,
@@ -340,7 +340,7 @@ export const PRODUCTS = [
   },
   {
     id: 'prod-ref-3',
-    name: 'Whirlpool 207L 5 Star Inverter Direct-Cool Single Door Refrigerator',
+    name: 'Whirlpool 207L 5 Star Inverter Direct-Cool Single Door Refrigerator (Sapphire Abyss)',
     brand: 'Whirlpool',
     category: 'Refrigerators',
     price: 17490,
@@ -348,11 +348,11 @@ export const PRODUCTS = [
     discount: '28% OFF',
     rating: 4.7,
     reviews: 410,
-    image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1584286595398-a59f21d313f5?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1584286595398-a59f21d313f5?auto=format&fit=crop&w=800&q=80'
     ],
-    description: 'IntelliSense Inverter Technology with 9 hours of cooling retention during power cuts, Crescent Door design, and Microblock technology.',
+    description: 'IntelliSense Inverter Technology with 9 hours of cooling retention during power cuts, Crescent Door design with laminar airflow, and Microblock bacterial protection.',
     features: ['5-Star Energy Rating', 'Up to 9 Hours Cooling Retention', 'Base Stand with Deep Vegetable Drawer', 'Microblock Anti-Bacterial Technology'],
     emi: '₹728/mo (No Cost EMI)',
     stock: 35,
@@ -394,9 +394,9 @@ export const PRODUCTS = [
     discount: '33% OFF',
     rating: 4.8,
     reviews: 890,
-    image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=800&q=80'
     ],
     description: 'Ecobubble technology penetrates fabric 2.5x faster, Dual Storm pulsator, Soft Closing door, Magic Filter, and Digital Inverter Motor with 20-yr warranty.',
     features: ['Ecobubble & BubbleStorm Wash', 'Digital Inverter with 20-Yr Motor Warranty', 'Soft Close Tempered Glass Lid', 'Magic Dual Lint Filter'],
@@ -416,9 +416,9 @@ export const PRODUCTS = [
     discount: '29% OFF',
     rating: 4.8,
     reviews: 320,
-    image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?auto=format&fit=crop&w=800&q=80'
     ],
     description: '9 Swirl Wash, Aqua Energie water softener device, 3D Warm Wash system with hot water hygiene cycle, 4 years comprehensive warranty.',
     features: ['3D Warm Wash with Hot Steam Cycle', 'Aqua Energie Built-in Water Softener', 'Crescent Moon Drum Structure', '4 Years Machine + 10 Years Motor Warranty'],
@@ -600,9 +600,9 @@ export const PRODUCTS = [
     discount: '32% OFF',
     rating: 4.7,
     reviews: 510,
-    image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&w=800&q=80'
     ],
     description: '25 Litre capacity ideal for baking, grilling, reheating, and defrosting. Stainless steel cavity, motorized rotisserie, and 200+ Indian auto-cook recipes.',
     features: ['Baking, Grilling & Convection Microwave', 'Stainless Steel Cavity for Uniform Heat', '200+ Auto Cook Programmed Recipes', 'Child Safety Lock & Sensory Defrost'],
@@ -669,9 +669,9 @@ export const PRODUCTS = [
     discount: '27% OFF',
     rating: 4.8,
     reviews: 490,
-    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80'
     ],
     description: 'Iconic mechanical physical rotating bezel with sapphire crystal glass, personalized heart rate zones, sleep coach, Body Composition BIA sensor.',
     features: ['Physical Slim Mechanical Rotating Bezel', 'BioActive Sensor: ECG, BP & Body Composition (BIA)', 'Sapphire Crystal Glass 1.5" Super AMOLED', 'NFC Contactless Samsung Pay'],
