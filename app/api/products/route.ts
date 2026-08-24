@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMongoDb } from '../../../src/lib/mongodb';
-import { PRODUCTS } from '../../../src/data/products';
+import { getMongoDb } from '@/src/lib/mongodb';
+import { PRODUCTS } from '@/src/data/products';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

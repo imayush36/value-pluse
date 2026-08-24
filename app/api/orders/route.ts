@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMongoDb } from '../../../src/lib/mongodb';
+import { getMongoDb } from '@/src/lib/mongodb';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
