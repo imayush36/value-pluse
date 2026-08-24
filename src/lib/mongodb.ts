@@ -7,7 +7,10 @@ const globalForMongo = globalThis as typeof globalThis & {
 export let mongoClientPromise: Promise<MongoClient> | undefined;
 
 export function getMongoClient(): Promise<MongoClient> {
-  const mongoUri = process.env.MONGODB_URI;
+  const mongoUri =
+    process.env.MONGODB_URI ||
+    process.env.NEXT_PUBLIC_MONGODB_URI ||
+    'mongodb+srv://ayush979430_db_user:afusIImbEIW1Jlpn@cluster0.gcikbaj.mongodb.net/';
 
   if (!mongoUri) {
     throw new Error('Missing MONGODB_URI environment variable');
